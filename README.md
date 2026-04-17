@@ -1,4 +1,4 @@
-# Code Aesthetic Gallery
+# Code Aesthetic Snippets
 
 A curated gallery of beautiful code snippets with live interactive previews - algorithms, shaders, generative art, and creative coding masterpieces rendered in real-time sandboxed iframes.
 

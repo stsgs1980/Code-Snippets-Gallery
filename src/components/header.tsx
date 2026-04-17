@@ -25,7 +25,7 @@ export function Header({ onAddClick }: HeaderProps) {
               <Code2 className="size-5" />
             </div>
             <span className="text-lg font-bold tracking-tight">
-              Code Aesthetic
+              Code Aesthetic Snippets
             </span>
           </div>
 

@@ -15,23 +15,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Code Aesthetic Gallery — Where Code Meets Art",
+  title: "Code Aesthetic Snippets — Where Code Meets Art",
   description:
     "A curated gallery of beautiful code snippets, shaders, generative art, and creative coding masterpieces",
   keywords: [
-    "Code Aesthetic",
+    "Code Aesthetic Snippets",
     "Creative Coding",
     "Generative Art",
     "Shaders",
     "Algorithms",
     "Gallery",
   ],
-  authors: [{ name: "Code Aesthetic" }],
+  authors: [{ name: "Code Aesthetic Snippets" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Code Aesthetic Gallery — Where Code Meets Art",
+    title: "Code Aesthetic Snippets — Where Code Meets Art",
     description:
       "A curated gallery of beautiful code snippets, shaders, generative art, and creative coding masterpieces",
     type: "website",
