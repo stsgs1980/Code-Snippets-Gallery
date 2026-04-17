@@ -521,7 +521,7 @@ void main() {
 ];
 
 async function seed() {
-  console.log('Seeding Code Aesthetic Snippets...');
+  console.log('Seeding Code Snippets Gallery...');
   
   // Clear existing data
   await db.codeSnippet.deleteMany();
