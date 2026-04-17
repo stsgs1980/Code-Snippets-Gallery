@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
+import { useLocale } from '@/hooks/use-locale';
 
 const LANGUAGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500',
@@ -47,16 +48,14 @@ interface SnippetCardProps {
 }
 
 function getPreviewLines(code: string, maxLines = 5): string {
-  return code
-    .split('\n')
-    .slice(0, maxLines)
-    .join('\n');
+  return code.split('\n').slice(0, maxLines).join('\n');
 }
 
 type TabType = 'preview' | 'code';
 
 export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('preview');
+  const { t } = useLocale();
   const accentColor = LANGUAGE_COLORS[snippet.language] || 'bg-gray-500';
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet.language] || '';
   const preview = getPreviewLines(snippet.code);
@@ -93,7 +92,7 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
 
         {/* Author */}
         <p className="text-xs text-muted-foreground">
-          by {snippet.author}
+          {t('card.by')} {snippet.author}
         </p>
 
         {/* Description */}
@@ -115,7 +114,7 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
               )}
             >
               <Play className="size-3" />
-              Preview
+              {t('card.preview')}
             </button>
             <button
               onClick={() => setActiveTab('code')}
@@ -127,7 +126,7 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
               )}
             >
               <Code2 className="size-3" />
-              Code
+              {t('card.code')}
             </button>
           </div>
 
@@ -166,7 +165,7 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
             onClick={() => onViewCode(snippet)}
           >
             <Eye className="size-3.5" />
-            View Code
+            {t('card.viewCode')}
           </Button>
         </div>
       </div>

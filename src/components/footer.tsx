@@ -1,8 +1,11 @@
 'use client';
 
 import { Code2 } from 'lucide-react';
+import { useLocale } from '@/hooks/use-locale';
 
 export function Footer() {
+  const { t } = useLocale();
+
   return (
     <footer className="border-t bg-background/80 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -12,7 +15,7 @@ export function Footer() {
             <span>Code Aesthetic Gallery &copy; 2025</span>
           </div>
           <p className="text-xs">
-            Built with Next.js, Tailwind CSS &amp; shadcn/ui
+            {t('footer.builtWith')}
           </p>
         </div>
       </div>

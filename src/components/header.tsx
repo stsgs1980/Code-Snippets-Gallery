@@ -1,8 +1,9 @@
 'use client';
 
-import { Code2, Plus, Moon, Sun } from 'lucide-react';
+import { Code2, Plus, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/hooks/use-locale';
 
 interface HeaderProps {
   onAddClick: () => void;
@@ -10,6 +11,9 @@ interface HeaderProps {
 
 export function Header({ onAddClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
+  const { locale, setLocale, t } = useLocale();
+
+  const toggleLocale = () => setLocale(locale === 'en' ? 'ru' : 'en');
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
@@ -26,7 +30,17 @@ export function Header({ onAddClick }: HeaderProps) {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLocale}
+              aria-label="Toggle language"
+              className="text-xs font-bold w-auto px-2 gap-1"
+            >
+              <Languages className="size-4" />
+              <span className="hidden sm:inline">{locale === 'en' ? 'РУС' : 'ENG'}</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -42,7 +56,7 @@ export function Header({ onAddClick }: HeaderProps) {
               className="gap-1.5"
             >
               <Plus className="size-4" />
-              <span className="hidden sm:inline">Add Snippet</span>
+              <span className="hidden sm:inline">{t('header.addSnippet')}</span>
             </Button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Code2, Palette, Layers } from 'lucide-react';
+import { useLocale } from '@/hooks/use-locale';
 
 interface Stats {
   totalSnippets: number;
@@ -11,6 +12,7 @@ interface Stats {
 }
 
 export function HeroSection() {
+  const { t } = useLocale();
   const [stats, setStats] = useState<Stats>({
     totalSnippets: 0,
     languages: 0,
@@ -18,7 +20,6 @@ export function HeroSection() {
   });
   const [hasStats, setHasStats] = useState(false);
 
-  // Single lightweight aggregation request — O(1) DB work instead of fetching all rows
   useEffect(() => {
     let cancelled = false;
     fetch('/api/snippets?stats=true')
@@ -37,9 +38,9 @@ export function HeroSection() {
   }, []);
 
   const statItems = [
-    { icon: Code2, label: 'Snippets', value: stats.totalSnippets },
-    { icon: Palette, label: 'Languages', value: stats.languages },
-    { icon: Layers, label: 'Categories', value: stats.categories },
+    { icon: Code2, label: t('hero.statSnippets'), value: stats.totalSnippets },
+    { icon: Palette, label: t('hero.statLanguages'), value: stats.languages },
+    { icon: Layers, label: t('hero.statCategories'), value: stats.categories },
   ];
 
   return (
@@ -64,14 +65,15 @@ export function HeroSection() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
         >
-          Where{' '}
+          {t('hero.title1')}{' '}
           <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
-            Code
+            {t('hero.titleHighlight1')}
           </span>{' '}
-          Meets{' '}
+          {t('hero.title2')}{' '}
           <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 bg-clip-text text-transparent">
-            Art
+            {t('hero.titleHighlight2')}
           </span>
+          {t('hero.title3')}
         </motion.h1>
 
         {/* Subtitle */}
@@ -81,8 +83,7 @@ export function HeroSection() {
           transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
           className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          A curated gallery of beautiful code — algorithms, shaders, generative art,
-          and creative coding masterpieces
+          {t('hero.subtitle')}
         </motion.p>
 
         {/* Stats */}

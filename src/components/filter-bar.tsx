@@ -3,6 +3,7 @@
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/use-locale';
 
 const LANGUAGES = ['All', 'JavaScript', 'Python', 'GLSL', 'Rust', 'Haskell', 'CSS', 'TypeScript'];
 const CATEGORIES = [
@@ -33,13 +34,15 @@ export function FilterBar({
   onCategoryChange,
   onSearchChange,
 }: FilterBarProps) {
+  const { t, tCat } = useLocale();
+
   return (
     <div className="space-y-4">
       {/* Search */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Search snippets..."
+          placeholder={t('filter.search')}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9"
@@ -49,7 +52,7 @@ export function FilterBar({
       {/* Language filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1">
-          Language:
+          {t('filter.language')}
         </span>
         {LANGUAGES.map((lang) => (
           <button
@@ -63,7 +66,7 @@ export function FilterBar({
                 : 'bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary'
             )}
           >
-            {lang}
+            {lang === 'All' ? t('filter.all') : lang}
           </button>
         ))}
       </div>
@@ -71,7 +74,7 @@ export function FilterBar({
       {/* Category filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1">
-          Category:
+          {t('filter.category')}
         </span>
         {CATEGORIES.map((cat) => (
           <button
@@ -85,7 +88,7 @@ export function FilterBar({
                 : 'bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary'
             )}
           >
-            {cat}
+            {tCat(cat)}
           </button>
         ))}
       </div>

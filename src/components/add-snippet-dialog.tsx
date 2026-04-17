@@ -20,14 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLocale } from '@/hooks/use-locale';
 
 const snippetSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
-  language: z.string().min(1, 'Language is required'),
-  category: z.string().min(1, 'Category is required'),
-  author: z.string().min(1, 'Author is required').max(50, 'Author name too long'),
-  description: z.string().max(500, 'Description too long').optional().default(''),
-  code: z.string().min(10, 'Code must be at least 10 characters'),
+  title: z.string().min(1).max(100),
+  language: z.string().min(1),
+  category: z.string().min(1),
+  author: z.string().min(1).max(50),
+  description: z.string().max(500).optional().default(''),
+  code: z.string().min(10),
 });
 
 type SnippetFormData = z.infer<typeof snippetSchema>;
@@ -50,6 +51,7 @@ interface AddSnippetDialogProps {
 }
 
 export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDialogProps) {
+  const { t, tCat } = useLocale();
   const [formData, setFormData] = useState({
     title: '',
     language: '',
@@ -63,7 +65,6 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
 
   const handleChange = (field: keyof SnippetFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error on change
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
@@ -87,7 +88,6 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
     setIsSubmitting(true);
     try {
       await onSubmit(result.data);
-      // Reset form
       setFormData({
         title: '',
         language: '',
@@ -106,19 +106,19 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Snippet</DialogTitle>
+          <DialogTitle>{t('add.title')}</DialogTitle>
           <DialogDescription>
-            Share a beautiful piece of code with the community
+            {t('add.subtitle')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">{t('add.titleLabel')}</Label>
             <Input
               id="title"
-              placeholder="e.g., Fractal Tree"
+              placeholder={t('add.titlePlaceholder')}
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
             />
@@ -130,10 +130,10 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
           {/* Language + Category row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Language *</Label>
+              <Label>{t('add.langLabel')}</Label>
               <Select value={formData.language} onValueChange={(v) => handleChange('language', v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t('add.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {LANGUAGES.map((lang) => (
@@ -149,15 +149,15 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
             </div>
 
             <div className="space-y-2">
-              <Label>Category *</Label>
+              <Label>{t('add.catLabel')}</Label>
               <Select value={formData.category} onValueChange={(v) => handleChange('category', v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t('add.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat}
+                      {tCat(cat)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -170,10 +170,10 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
 
           {/* Author */}
           <div className="space-y-2">
-            <Label htmlFor="author">Author *</Label>
+            <Label htmlFor="author">{t('add.authorLabel')}</Label>
             <Input
               id="author"
-              placeholder="e.g., CodeArtist"
+              placeholder={t('add.authorPlaceholder')}
               value={formData.author}
               onChange={(e) => handleChange('author', e.target.value)}
             />
@@ -184,10 +184,10 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('add.descLabel')}</Label>
             <Textarea
               id="description"
-              placeholder="Describe what makes this code beautiful..."
+              placeholder={t('add.descPlaceholder')}
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
@@ -199,10 +199,10 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
 
           {/* Code */}
           <div className="space-y-2">
-            <Label htmlFor="code">Code *</Label>
+            <Label htmlFor="code">{t('add.codeLabel')}</Label>
             <Textarea
               id="code"
-              placeholder="Paste your beautiful code here..."
+              placeholder={t('add.codePlaceholder')}
               value={formData.code}
               onChange={(e) => handleChange('code', e.target.value)}
               rows={8}
@@ -220,10 +220,10 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('add.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Snippet'}
+              {isSubmitting ? t('add.submitting') : t('add.submit')}
             </Button>
           </div>
         </form>

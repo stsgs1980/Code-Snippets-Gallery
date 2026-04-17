@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
+import { useLocale } from '@/hooks/use-locale';
 
 const LANGUAGE_BADGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
@@ -61,6 +62,7 @@ type TabType = 'preview' | 'code';
 export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: CodeDialogProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('preview');
+  const { t } = useLocale();
 
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet?.language || ''] || '';
 
@@ -101,7 +103,7 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
                   <div className="space-y-1.5">
                     <DialogTitle className="text-xl">{snippet.title}</DialogTitle>
                     <DialogDescription className="text-sm">
-                      by {snippet.author}
+                      {t('card.by')} {snippet.author}
                     </DialogDescription>
                   </div>
                   <Badge
@@ -131,7 +133,7 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
                 )}
               >
                 <Play className="size-4" />
-                Preview
+                {t('card.preview')}
               </button>
               <button
                 onClick={() => setActiveTab('code')}
@@ -143,7 +145,7 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
                 )}
               >
                 <Code2 className="size-4" />
-                Code
+                {t('card.code')}
               </button>
             </div>
 
@@ -201,7 +203,7 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
                   ) : (
                     <Copy className="size-4" />
                   )}
-                  <span className="text-sm">{copied ? 'Copied!' : 'Copy'}</span>
+                  <span className="text-sm">{copied ? t('dialog.copied') : t('dialog.copy')}</span>
                 </Button>
               </div>
 
@@ -213,23 +215,23 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
                     className="gap-1.5 text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="size-4" />
-                    <span className="text-sm">Delete</span>
+                    <span className="text-sm">{t('dialog.delete')}</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Snippet</AlertDialogTitle>
+                    <AlertDialogTitle>{t('dialog.deleteTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete &quot;{snippet.title}&quot;? This action cannot be undone.
+                      {t('dialog.deleteConfirm')} &quot;{snippet.title}&quot;? {t('dialog.deleteUndo')}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('dialog.cancel')}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => onDelete(snippet.id)}
                       className="bg-destructive text-white hover:bg-destructive/90"
                     >
-                      Delete
+                      {t('dialog.delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

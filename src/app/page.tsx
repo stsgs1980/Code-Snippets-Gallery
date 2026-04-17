@@ -12,14 +12,15 @@ import { Footer } from '@/components/footer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SearchX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { LocaleProvider, useLocale } from '@/hooks/use-locale';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,          // Cache data for 60s instead of refetching on every focus
-      gcTime: 5 * 60_000,         // Keep unused data in cache for 5 min
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
       retry: 1,
-      refetchOnWindowFocus: false, // Avoid redundant network requests
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -44,6 +45,7 @@ function GalleryContent() {
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLocale();
   const queryClientInstance = useQueryClient();
 
   const { data: snippets = [], isLoading } = useQuery<Snippet[]>({
@@ -76,12 +78,12 @@ function GalleryContent() {
       }
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to like snippet',
+        title: t('toast.error'),
+        description: t('toast.likeFailed'),
         variant: 'destructive',
       });
     }
-  }, [toast, queryClientInstance, activeLanguage, activeCategory, searchQuery]);
+  }, [toast, queryClientInstance, activeLanguage, activeCategory, searchQuery, t]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -94,18 +96,18 @@ function GalleryContent() {
         setCodeDialogOpen(false);
         setSelectedSnippet(null);
         toast({
-          title: 'Deleted',
-          description: 'Snippet deleted successfully',
+          title: t('toast.deleted'),
+          description: t('toast.deleteSuccess'),
         });
       }
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to delete snippet',
+        title: t('toast.error'),
+        description: t('toast.deleteFailed'),
         variant: 'destructive',
       });
     }
-  }, [toast, queryClientInstance, activeLanguage, activeCategory, searchQuery]);
+  }, [toast, queryClientInstance, activeLanguage, activeCategory, searchQuery, t]);
 
   const handleAddSnippet = useCallback(async (data: {
     title: string;
@@ -123,26 +125,26 @@ function GalleryContent() {
       });
       if (res.ok) {
         toast({
-          title: 'Success',
-          description: 'Snippet added successfully!',
+          title: t('toast.success'),
+          description: t('toast.addSuccess'),
         });
         queryClientInstance.invalidateQueries({ queryKey: ['snippets'] });
       } else {
         const err = await res.json();
         toast({
-          title: 'Error',
-          description: err.error || 'Failed to add snippet',
+          title: t('toast.error'),
+          description: err.error || t('toast.addFailed'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to add snippet',
+        title: t('toast.error'),
+        description: t('toast.addFailed'),
         variant: 'destructive',
       });
     }
-  }, [toast, queryClientInstance]);
+  }, [toast, queryClientInstance, t]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -236,14 +238,15 @@ function LoadingSkeleton() {
 }
 
 function EmptyState() {
+  const { t } = useLocale();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted mb-4">
         <SearchX className="size-8 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold mb-1">No snippets found</h3>
+      <h3 className="text-lg font-semibold mb-1">{t('empty.title')}</h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Try adjusting your filters or search query to discover beautiful code.
+        {t('empty.desc')}
       </p>
     </div>
   );
@@ -252,7 +255,9 @@ function EmptyState() {
 export default function Home() {
   return (
     <QueryClientProvider client={queryClient}>
-      <GalleryContent />
+      <LocaleProvider>
+        <GalleryContent />
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }
