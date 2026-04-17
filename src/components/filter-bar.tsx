@@ -51,7 +51,7 @@ export function FilterBar({
 
       {/* Language filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1">
+        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1" suppressHydrationWarning>
           {t('filter.language')}
         </span>
         {LANGUAGES.map((lang) => (
@@ -66,14 +66,14 @@ export function FilterBar({
                 : 'bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary'
             )}
           >
-            {lang === 'All' ? t('filter.all') : lang}
+            <span suppressHydrationWarning>{lang === 'All' ? t('filter.all') : lang}</span>
           </button>
         ))}
       </div>
 
       {/* Category filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1">
+        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1" suppressHydrationWarning>
           {t('filter.category')}
         </span>
         {CATEGORIES.map((cat) => (
@@ -88,7 +88,7 @@ export function FilterBar({
                 : 'bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary'
             )}
           >
-            {tCat(cat)}
+            <span suppressHydrationWarning>{tCat(cat)}</span>
           </button>
         ))}
       </div>

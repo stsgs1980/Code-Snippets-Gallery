@@ -39,7 +39,7 @@ export function Header({ onAddClick }: HeaderProps) {
               className="text-xs font-bold w-auto px-2 gap-1"
             >
               <Languages className="size-4" />
-              <span className="hidden sm:inline">{locale === 'en' ? 'РУС' : 'ENG'}</span>
+              <span className="hidden sm:inline" suppressHydrationWarning>{locale === 'en' ? 'РУС' : 'ENG'}</span>
             </Button>
             <Button
               variant="ghost"
@@ -56,7 +56,7 @@ export function Header({ onAddClick }: HeaderProps) {
               className="gap-1.5"
             >
               <Plus className="size-4" />
-              <span className="hidden sm:inline">{t('header.addSnippet')}</span>
+              <span className="hidden sm:inline" suppressHydrationWarning>{t('header.addSnippet')}</span>
             </Button>
           </div>
         </div>

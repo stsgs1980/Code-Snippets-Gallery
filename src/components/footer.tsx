@@ -14,7 +14,7 @@ export function Footer() {
             <Code2 className="size-4" />
             <span>Code Aesthetic Gallery &copy; 2025</span>
           </div>
-          <p className="text-xs">
+          <p className="text-xs" suppressHydrationWarning>
             {t('footer.builtWith')}
           </p>
         </div>

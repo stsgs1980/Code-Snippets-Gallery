@@ -64,6 +64,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
+          suppressHydrationWarning
         >
           {t('hero.title1')}{' '}
           <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
@@ -82,6 +83,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
           className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+          suppressHydrationWarning
         >
           {t('hero.subtitle')}
         </motion.p>
@@ -98,7 +100,7 @@ export function HeroSection() {
               <div key={stat.label} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <stat.icon className="size-4 text-primary" />
                 <span className="font-semibold text-foreground">{stat.value}</span>
-                <span>{stat.label}</span>
+                <span suppressHydrationWarning>{stat.label}</span>
               </div>
             ))}
           </motion.div>

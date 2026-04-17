@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import type { Locale, DictKey } from '@/lib/i18n';
 import { t, tCategory } from '@/lib/i18n';
 
@@ -15,31 +15,55 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function readSavedLocale(): Locale {
+let cachedLocale: Locale | null = null;
+const listeners = new Set<() => void>();
+
+function emitChange() {
+  for (const fn of listeners) fn();
+}
+
+function subscribe(fn: () => void) {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+}
+
+function getSnapshot(): Locale {
+  if (cachedLocale !== null) return cachedLocale;
   if (typeof window === 'undefined') return 'en';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'en' || stored === 'ru') return stored;
+    if (stored === 'en' || stored === 'ru') {
+      cachedLocale = stored;
+      return stored;
+    }
   } catch {}
   const browserLang = navigator.language?.slice(0, 2);
-  return browserLang === 'ru' ? 'ru' : 'en';
+  cachedLocale = browserLang === 'ru' ? 'ru' : 'en';
+  return cachedLocale;
+}
+
+function getServerSnapshot(): Locale {
+  return 'en';
+}
+
+function applyLocale(l: Locale) {
+  cachedLocale = l;
+  try {
+    localStorage.setItem(STORAGE_KEY, l);
+  } catch {}
+  emitChange();
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(readSavedLocale);
-  const mountedRef = useRef(false);
+  const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  // Sync html lang attribute with locale changes after mount
+  // Sync html lang attribute whenever locale changes
   useEffect(() => {
-    mountedRef.current = true;
     document.documentElement.lang = locale;
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
-    setLocaleState(l);
-    try {
-      localStorage.setItem(STORAGE_KEY, l);
-    } catch {}
+    applyLocale(l);
   }, []);
 
   const tc = useCallback((key: DictKey) => t(key, locale), [locale]);
