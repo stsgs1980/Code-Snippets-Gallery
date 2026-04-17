@@ -536,5 +536,8 @@ async function seed() {
 }
 
 seed()
-  .catch(console.error)
-  .finally(() => process.exit(0));
+  .catch((err) => {
+    console.error('Seed failed:', err);
+    process.exit(1);
+  })
+  .then(() => process.exit(0));

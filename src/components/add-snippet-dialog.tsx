@@ -21,6 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLocale } from '@/hooks/use-locale';
+import { CATEGORIES_WITHOUT_ALL } from '@/lib/constants';
+
+const LANGUAGES = ['JavaScript', 'Python', 'GLSL', 'Rust', 'Haskell', 'CSS', 'TypeScript'];
 
 const snippetSchema = z.object({
   title: z.string().min(1).max(100),
@@ -32,17 +35,6 @@ const snippetSchema = z.object({
 });
 
 type SnippetFormData = z.infer<typeof snippetSchema>;
-
-const LANGUAGES = ['JavaScript', 'Python', 'GLSL', 'Rust', 'Haskell', 'CSS', 'TypeScript'];
-const CATEGORIES = [
-  'Generative Art',
-  'Algorithms',
-  'Shaders',
-  'Data Visualization',
-  'Creative Coding',
-  'Interactive',
-  'UI/UX',
-];
 
 interface AddSnippetDialogProps {
   open: boolean;
@@ -155,7 +147,7 @@ export function AddSnippetDialog({ open, onOpenChange, onSubmit }: AddSnippetDia
                   <SelectValue placeholder={t('add.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((cat) => (
+                  {CATEGORIES_WITHOUT_ALL.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {tCat(cat)}
                     </SelectItem>

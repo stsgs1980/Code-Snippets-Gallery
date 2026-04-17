@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { rateLimit } from '@/lib/rate-limit';
+import { validateApiKey } from '@/lib/api-auth';
 
 // Rate limit: 20 create requests per minute per IP
 const CREATE_LIMIT = 20;
@@ -54,6 +55,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
     const statsOnly = searchParams.get('stats') === 'true';
 
     const where: Prisma.CodeSnippetWhereInput = {};
@@ -97,6 +100,7 @@ export async function GET(request: NextRequest) {
         { likes: 'desc' },
         { createdAt: 'desc' },
       ],
+      take: limit,
     });
 
     return NextResponse.json(snippets);
@@ -107,6 +111,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!validateApiKey(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   if (rateLimit(ip + ':create', CREATE_LIMIT, CREATE_WINDOW_MS)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });

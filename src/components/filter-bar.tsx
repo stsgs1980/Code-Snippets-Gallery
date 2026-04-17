@@ -4,18 +4,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/hooks/use-locale';
-
-const LANGUAGES = ['All', 'JavaScript', 'Python', 'GLSL', 'Rust', 'Haskell', 'CSS', 'TypeScript'];
-const CATEGORIES = [
-  'All',
-  'Generative Art',
-  'Algorithms',
-  'Shaders',
-  'Data Visualization',
-  'Creative Coding',
-  'Interactive',
-  'UI/UX',
-];
+import { LANGUAGES, CATEGORIES } from '@/lib/constants';
 
 interface FilterBarProps {
   activeLanguage: string;
@@ -50,7 +39,7 @@ export function FilterBar({
       </div>
 
       {/* Language filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" role="radiogroup" aria-label="Filter by language">
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1" suppressHydrationWarning>
           {t('filter.language')}
         </span>
@@ -58,6 +47,8 @@ export function FilterBar({
           <button
             key={lang}
             onClick={() => onLanguageChange(lang)}
+            role="radio"
+            aria-checked={activeLanguage === lang}
             className={cn(
               'whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all',
               'border hover:opacity-90',
@@ -72,7 +63,7 @@ export function FilterBar({
       </div>
 
       {/* Category filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" role="radiogroup" aria-label="Filter by category">
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mr-1" suppressHydrationWarning>
           {t('filter.category')}
         </span>
@@ -80,6 +71,8 @@ export function FilterBar({
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}
+            role="radio"
+            aria-checked={activeCategory === cat}
             className={cn(
               'whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all',
               'border hover:opacity-90',

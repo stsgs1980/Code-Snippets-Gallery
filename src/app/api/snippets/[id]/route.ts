@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
+import { validateApiKey } from '@/lib/api-auth';
 
 // Rate limit: 30 delete requests per minute per IP
 const DELETE_LIMIT = 30;
@@ -40,6 +41,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!validateApiKey(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   if (rateLimit(ip + ':delete', DELETE_LIMIT, DELETE_WINDOW_MS)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });

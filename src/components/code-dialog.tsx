@@ -26,16 +26,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
 import { useLocale } from '@/hooks/use-locale';
-
-const LANGUAGE_BADGE_COLORS: Record<string, string> = {
-  JavaScript: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-  Python: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20',
-  GLSL: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
-  Rust: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20',
-  Haskell: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
-  CSS: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20',
-  TypeScript: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-};
+import { useToast } from '@/hooks/use-toast';
+import { LANGUAGE_BADGE_COLORS } from '@/lib/constants';
 
 interface Snippet {
   id: string;
@@ -63,6 +55,7 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('preview');
   const { t } = useLocale();
+  const { toast } = useToast();
 
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet?.language || ''] || '';
 
@@ -73,14 +66,8 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = snippet.code;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      // Clipboard API not available (e.g. insecure context)
+      toast({ title: 'Copy failed', description: 'Please copy the code manually', variant: 'destructive' });
     }
   };
 

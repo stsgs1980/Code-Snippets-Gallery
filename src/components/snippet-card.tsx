@@ -8,26 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
 import { useLocale } from '@/hooks/use-locale';
-
-const LANGUAGE_COLORS: Record<string, string> = {
-  JavaScript: 'bg-amber-500',
-  Python: 'bg-green-500',
-  GLSL: 'bg-purple-500',
-  Rust: 'bg-orange-500',
-  Haskell: 'bg-cyan-500',
-  CSS: 'bg-pink-500',
-  TypeScript: 'bg-blue-500',
-};
-
-const LANGUAGE_BADGE_COLORS: Record<string, string> = {
-  JavaScript: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-  Python: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20',
-  GLSL: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
-  Rust: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20',
-  Haskell: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
-  CSS: 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20',
-  TypeScript: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-};
+import { LANGUAGE_COLORS, LANGUAGE_BADGE_COLORS } from '@/lib/constants';
 
 interface Snippet {
   id: string;
@@ -103,9 +84,11 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
         {/* Tab bar + Content */}
         <div className="rounded-lg overflow-hidden border border-border/50">
           {/* Tab buttons */}
-          <div className="flex border-b border-border/50 bg-muted/40">
+          <div className="flex border-b border-border/50 bg-muted/40" role="tablist">
             <button
               onClick={() => setActiveTab('preview')}
+              role="tab"
+              aria-selected={activeTab === 'preview'}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-colors',
                 activeTab === 'preview'
@@ -118,6 +101,8 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
             </button>
             <button
               onClick={() => setActiveTab('code')}
+              role="tab"
+              aria-selected={activeTab === 'code'}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-colors',
                 activeTab === 'code'

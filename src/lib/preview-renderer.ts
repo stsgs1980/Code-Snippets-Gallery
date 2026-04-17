@@ -629,7 +629,8 @@ function generateCanvas2dHTML(setupCode: string, animate: boolean): string {
     ? `let _animId;\nfunction _loop(t) {\n  render(ctx, canvas.width, canvas.height, t / 1000);\n  _animId = requestAnimationFrame(_loop);\n}\n_animId = requestAnimationFrame(_loop);`
     : `render(ctx, canvas.width, canvas.height, 0);`;
 
-  return `<!DOCTYPE html><html><head><style>
+  return `<!DOCTYPE html><html><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;"><style>
 *{margin:0;padding:0}body{background:#0a0a0f;overflow:hidden}
 canvas{display:block;width:100%;height:100%}
 </style></head><body>
@@ -645,7 +646,8 @@ ${loopCode}
 }
 
 function generateWebGLHTML(fragShader: string): string {
-  return `<!DOCTYPE html><html><head><style>
+  return `<!DOCTYPE html><html><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;"><style>
 *{margin:0;padding:0}body{overflow:hidden;background:#000}
 canvas{display:block;width:100%;height:100%}
 </style></head><body>
@@ -702,7 +704,8 @@ function generateCSSHTML(cssAndHtml: string): string {
     css = cssAndHtml.substring(0, idx);
     html = cssAndHtml.substring(idx);
   }
-  return `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}</body></html>`;
+  return `<!DOCTYPE html><html><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:;"><style>${css}</style></head><body>${html}</body></html>`;
 }
 
 function generateStaticHTML(language: string, snippet: {
@@ -717,7 +720,8 @@ function generateStaticHTML(language: string, snippet: {
     escapeHtml(line)
   ).join('\n');
 
-  return `<!DOCTYPE html><html><head><style>
+  return `<!DOCTYPE html><html><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:;"><style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0c0c14;display:flex;align-items:center;justify-content:center;height:100vh;font-family:'Courier New',monospace;color:#e0e0e0;overflow:hidden}
 .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;max-width:90%;max-height:90%;overflow:hidden}
