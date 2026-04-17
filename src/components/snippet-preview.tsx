@@ -3,11 +3,10 @@
 import { useRef, useEffect, memo } from 'react';
 import { generatePreviewHTML } from '@/lib/preview-renderer';
 
-// Module-level cache: avoid re-creating Blobs for the same snippet
-const blobCache = new Map<string, string>();
+// Module-level HTML cache: avoid regenerating for the same snippet
+const htmlCache = new Map<string, string>();
 
 interface SnippetPreviewProps {
-  snippetId: string;
   snippet: {
     id: string;
     title: string;
@@ -27,26 +26,21 @@ export const SnippetPreview = memo(function SnippetPreview({ snippet, className 
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // Cache hit: reuse existing blob URL — zero allocations
-    let url = blobCache.get(snippet.id);
-    if (!url) {
-      const html = generatePreviewHTML(snippet);
-      const blob = new Blob([html], { type: 'text/html' });
-      url = URL.createObjectURL(blob);
-      blobCache.set(snippet.id, url);
+    // Cache: generate HTML once per snippet
+    let html = htmlCache.get(snippet.id);
+    if (!html) {
+      html = generatePreviewHTML(snippet);
+      htmlCache.set(snippet.id, html);
     }
 
-    iframe.src = url;
-
-    return () => {
-      // Don't revoke — keep in cache for revisit
-    };
+    // Use srcdoc — works reliably in sandboxed iframes (no cross-origin blob URL issues)
+    iframe.srcdoc = html;
   }, [snippet.id]);
 
   return (
     <iframe
       ref={iframeRef}
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-same-origin"
       className={`w-full h-full border-0 ${className || ''}`}
       title={`Preview: ${snippet.title}`}
     />

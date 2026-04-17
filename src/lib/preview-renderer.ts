@@ -17,38 +17,42 @@ const PREVIEW_MAP: Record<string, PreviewConfig> = {
     // Particle Constellation
     type: 'canvas2d',
     setup: `
-const particles = [];
-for (let i = 0; i < 80; i++) {
-  particles.push({
-    x: Math.random() * w, y: Math.random() * h,
-    vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
-    radius: Math.random() * 1.5 + 0.5
-  });
+var _particles = null;
+function _initParticles(w, h) {
+  _particles = [];
+  for (var i = 0; i < 80; i++) {
+    _particles.push({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
+      radius: Math.random() * 1.5 + 0.5
+    });
+  }
 }
 function render(ctx, w, h, time) {
+  if (!_particles) _initParticles(w, h);
   ctx.fillStyle = 'rgba(10,10,20,0.15)';
   ctx.fillRect(0, 0, w, h);
-  for (const p of particles) {
+  for (const p of _particles) {
     p.x += p.vx; p.y += p.vy;
     if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
     if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
   }
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      const dx = particles[i].x - particles[j].x;
-      const dy = particles[i].y - particles[j].y;
+  for (let i = 0; i < _particles.length; i++) {
+    for (let j = i + 1; j < _particles.length; j++) {
+      const dx = _particles[i].x - _particles[j].x;
+      const dy = _particles[i].y - _particles[j].y;
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d < 100) {
         ctx.strokeStyle = 'rgba(150,180,255,' + ((1 - d / 100) * 0.5) + ')';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.moveTo(_particles[i].x, _particles[i].y);
+        ctx.lineTo(_particles[j].x, _particles[j].y);
         ctx.stroke();
       }
     }
   }
-  for (const p of particles) {
+  for (const p of _particles) {
     ctx.fillStyle = 'rgba(180,200,255,0.9)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);

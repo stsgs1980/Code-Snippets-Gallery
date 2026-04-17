@@ -71,3 +71,23 @@ Stage Summary:
 - Все 9 интерактивных preview работают корректно
 - 3 статических preview (Haskell, Python, Rust) корректно отображаются как "not available"
 - Чистая архитектура шаблонов: единый контракт `render(ctx, w, h, time)` для canvas2d
+
+---
+Task ID: 4
+Agent: main
+Task: Исправить blob URL cross-origin блокировку и canPreview gate
+
+Work Log:
+- Обнаружена корневая причина: blob URL (`blob:https://preview-chat-...`) блокируется cross-origin политикой в sandboxed iframe. Referrer policy: strict-origin-when-cross-origin
+- SnippetPreview.tsx: заменён `URL.createObjectURL(blob)` + `iframe.src = url` на `iframe.srcdoc = html`. srcdoc работает надёжно в sandboxed iframes без cross-origin проблем
+- SnippetPreview.tsx: изменён sandbox с `allow-scripts` на `allow-scripts allow-same-origin` для корректной работы WebGL
+- SnippetPreview.tsx: заменён blobCache на htmlCache (кэширование HTML строк вместо blob URL)
+- CodeDialog.tsx: удалён `canPreview` gate и импорт `hasInteractivePreview`. Все сниппеты теперь показывают превью (статичные — стильную карточку, интерактивные — анимации)
+- snippet-card.tsx: уже не содержал canPreview gate (предыдущая сессия), проверено
+- Particle Constellation: w/h scope баг уже исправлен (предыдущая сессия), проверено
+- ESLint — чисто, dev server — без ошибок
+
+Stage Summary:
+- Blob URL → srcdoc: решена cross-origin блокировка preview в sandboxed iframe
+- Все 12 сниппетов теперь показывают превью (9 интерактивных + 3 статических карточки)
+- CodeDialog больше не блокирует статичные сниппеты (Haskell/Python/Rust)

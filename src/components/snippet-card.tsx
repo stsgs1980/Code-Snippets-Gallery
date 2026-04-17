@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
-import { hasInteractivePreview } from '@/lib/preview-renderer';
 
 const LANGUAGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500',
@@ -61,7 +60,6 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
   const accentColor = LANGUAGE_COLORS[snippet.language] || 'bg-gray-500';
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet.language] || '';
   const preview = getPreviewLines(snippet.code);
-  const canPreview = hasInteractivePreview(snippet.id);
 
   return (
     <motion.div
@@ -136,15 +134,7 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
           {/* Tab content */}
           <div className="relative bg-[#0c0c14] dark:bg-[#08080e]" style={{ height: '160px' }}>
             {activeTab === 'preview' && (
-              canPreview ? (
-                <SnippetPreview snippet={snippet} />
-              ) : (
-                <div className="flex items-center justify-center h-full px-4">
-                  <p className="text-[11px] text-muted-foreground/60 text-center">
-                    Preview available in viewer
-                  </p>
-                </div>
-              )
+              <SnippetPreview snippet={snippet} />
             )}
 
             {activeTab === 'code' && (

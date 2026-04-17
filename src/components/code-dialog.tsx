@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { SnippetPreview } from '@/components/snippet-preview';
-import { hasInteractivePreview } from '@/lib/preview-renderer';
 
 const LANGUAGE_BADGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
@@ -64,7 +63,6 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
   const [activeTab, setActiveTab] = useState<TabType>('preview');
 
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet?.language || ''] || '';
-  const canPreview = snippet ? hasInteractivePreview(snippet.id) : false;
 
   const handleCopy = async () => {
     if (!snippet) return;
@@ -90,12 +88,6 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
   };
 
   const lines = snippet?.code.split('\n') || [];
-
-  // Reset to preview tab when snippet changes
-  const prevId = snippet?.id;
-  if (prevId) {
-    // Using a trick: this runs on render
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,23 +150,9 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
             {/* Tab Content */}
             <div className="flex-1 min-h-0">
               {activeTab === 'preview' && (
-                canPreview ? (
-                  <div className="h-[50vh] sm:h-[55vh]">
-                    <SnippetPreview snippet={snippet} />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-[50vh] sm:h-[55vh]">
-                    <div className="text-center">
-                      <Code2 className="size-10 mx-auto text-muted-foreground/30 mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        Live preview is not available for {snippet.language}
-                      </p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">
-                        Switch to the Code tab to view the source
-                      </p>
-                    </div>
-                  </div>
-                )
+                <div className="h-[50vh] sm:h-[55vh]">
+                  <SnippetPreview snippet={snippet} />
+                </div>
               )}
 
               {activeTab === 'code' && (
