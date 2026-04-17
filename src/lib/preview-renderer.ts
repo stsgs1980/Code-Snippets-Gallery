@@ -1,42 +1,45 @@
 interface PreviewConfig {
   type: 'canvas2d' | 'webgl' | 'css' | 'static';
+  /** For canvas2d: full JS that defines init vars + `function render(ctx, w, h, time){}` */
+  /** For webgl: fragment shader source */
+  /** For css: full CSS + trailing HTML divs */
+  /** For static: language name */
   setup: string;
-  render?: string;
-  animate?: boolean;
+  animate: boolean;
 }
 
 const PREVIEW_MAP: Record<string, PreviewConfig> = {
-  // ---- CANVAS 2D ----
+  // ============================================================
+  //  CANVAS 2D — each template defines: vars + function render(ctx, w, h, time)
+  // ============================================================
+
   'cmo2qvu9m0008nrxxsd4rh7e0': {
+    // Particle Constellation
     type: 'canvas2d',
     setup: `
 const particles = [];
 for (let i = 0; i < 80; i++) {
   particles.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 0.6,
-    vy: (Math.random() - 0.5) * 0.6,
+    x: Math.random() * w, y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
     radius: Math.random() * 1.5 + 0.5
   });
 }
-function draw() {
+function render(ctx, w, h, time) {
   ctx.fillStyle = 'rgba(10,10,20,0.15)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, w, h);
   for (const p of particles) {
     p.x += p.vx; p.y += p.vy;
-    if (p.x < 0) p.x = canvas.width;
-    if (p.x > canvas.width) p.x = 0;
-    if (p.y < 0) p.y = canvas.height;
-    if (p.y > canvas.height) p.y = 0;
+    if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+    if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
   }
   for (let i = 0; i < particles.length; i++) {
     for (let j = i + 1; j < particles.length; j++) {
       const dx = particles[i].x - particles[j].x;
       const dy = particles[i].y - particles[j].y;
-      const d = Math.sqrt(dx*dx + dy*dy);
+      const d = Math.sqrt(dx * dx + dy * dy);
       if (d < 100) {
-        ctx.strokeStyle = \`rgba(150,180,255,\${(1-d/100)*0.5})\`;
+        ctx.strokeStyle = 'rgba(150,180,255,' + ((1 - d / 100) * 0.5) + ')';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
@@ -48,7 +51,7 @@ function draw() {
   for (const p of particles) {
     ctx.fillStyle = 'rgba(180,200,255,0.9)';
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
     ctx.fill();
   }
 }`,
@@ -56,31 +59,32 @@ function draw() {
   },
 
   'cmo2qvu9k0005nrxx0k4xitnt': {
+    // Neon Grid (Synthwave)
     type: 'canvas2d',
     setup: `
-function drawNeonGrid(ctx, w, h, t) {
+function render(ctx, w, h, time) {
   ctx.fillStyle = '#0d0221';
   ctx.fillRect(0, 0, w, h);
   const horizon = h * 0.45;
   const vanishX = w / 2;
   const gridLines = 30;
-  const scroll = (t * 40) % (h - horizon);
+  const scroll = (time * 40) % (h - horizon);
   for (let i = 0; i < gridLines; i++) {
     const ratio = (i - scroll / ((h - horizon) / gridLines)) / gridLines;
     if (ratio < 0) continue;
     const y = horizon + ratio * (h - horizon);
     const alpha = Math.min(1, ratio * 2);
-    ctx.strokeStyle = \`hsla(320, 100%, 60%, \${alpha * 0.6})\`;
+    ctx.strokeStyle = 'hsla(320, 100%, 60%, ' + (alpha * 0.6) + ')';
     ctx.lineWidth = ratio > 0.5 ? 1.5 : 0.5;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
   }
   for (let i = -gridLines; i <= gridLines; i++) {
     const spacing = i * (w / gridLines);
-    ctx.strokeStyle = \`hsla(280, 100%, 60%, \${0.3 - Math.abs(i) * 0.008})\`;
+    ctx.strokeStyle = 'hsla(280, 100%, 60%, ' + (0.3 - Math.abs(i) * 0.008) + ')';
     ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.moveTo(vanishX, horizon); ctx.lineTo(vanishX + spacing, h); ctx.stroke();
   }
-  const grad = ctx.createRadialGradient(vanishX, horizon, 0, vanishX, horizon, 120);
+  const grad = ctx.createRadialGradient(vanishX, horizon, 0, vanishX, horizon, Math.min(w, h) * 0.3);
   grad.addColorStop(0, 'rgba(255, 100, 200, 0.4)');
   grad.addColorStop(1, 'transparent');
   ctx.fillStyle = grad;
@@ -90,34 +94,44 @@ function drawNeonGrid(ctx, w, h, t) {
   },
 
   'cmo2qvu9h0001nrxxdu20yjsm': {
+    // Fractal Tree
     type: 'canvas2d',
     setup: `
 let seed = 42;
 function pseudoRandom() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-function drawTree(ctx, x, y, len, angle, depth) {
-  if (depth === 0 || len < 2) return;
-  const sway = Math.sin(Date.now() / 1000 + depth * 0.5) * 0.03;
-  const rad = (angle + sway) * Math.PI / 180;
-  const x2 = x + len * Math.cos(rad);
-  const y2 = y + len * Math.sin(rad);
-  const hue = 120 + depth * 8;
-  ctx.strokeStyle = \`hsl(\${hue}, 70%, \${30 + depth * 5}%)\`;
-  ctx.lineWidth = depth * 0.8;
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
-  if (depth < 3) {
-    ctx.fillStyle = \`hsla(\${50 + pseudoRandom() * 40}, 90%, 65%, 0.6)\`;
-    ctx.beginPath(); ctx.arc(x2, y2, 3 + pseudoRandom() * 4, 0, Math.PI*2); ctx.fill();
-  }
-  const shrink = 0.68 + pseudoRandom() * 0.08;
-  seed = 42; // reset seed for consistent shape
-  drawTree(ctx, x2, y2, len * 0.7, angle - 22, depth - 1);
+function render(ctx, w, h, time) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#0a0f0a';
+  ctx.fillRect(0, 0, w, h);
   seed = 42;
-  drawTree(ctx, x2, y2, len * 0.72, angle + 25, depth - 1);
+  function branch(x, y, len, angle, depth) {
+    if (depth === 0 || len < 2) return;
+    const sway = Math.sin(time + depth * 0.5) * 0.03;
+    const rad = (angle + sway) * Math.PI / 180;
+    const x2 = x + len * Math.cos(rad);
+    const y2 = y + len * Math.sin(rad);
+    const hue = 120 + depth * 8;
+    ctx.strokeStyle = 'hsl(' + hue + ', 70%, ' + (30 + depth * 5) + '%)';
+    ctx.lineWidth = depth * 0.8;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
+    if (depth < 3) {
+      ctx.fillStyle = 'hsla(' + (50 + pseudoRandom() * 40) + ', 90%, 65%, 0.6)';
+      ctx.beginPath(); ctx.arc(x2, y2, 3 + pseudoRandom() * 4, 0, Math.PI * 2); ctx.fill();
+    }
+    seed = 42;
+    const shrink = 0.68 + pseudoRandom() * 0.08;
+    seed = 42;
+    branch(x2, y2, len * shrink, angle - 22, depth - 1);
+    seed = 42;
+    branch(x2, y2, len * shrink * 1.05, angle + 25, depth - 1);
+  }
+  branch(w / 2, h * 0.85, h * 0.22, -90, 10);
 }`,
     animate: true,
   },
 
   'cmo2qvu9g0000nrxxinarznq4': {
+    // Spiral of Primes
     type: 'canvas2d',
     setup: `
 function isPrime(n) {
@@ -125,7 +139,7 @@ function isPrime(n) {
   for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
   return true;
 }
-function drawPrimeSpiral(ctx, w, h) {
+function render(ctx, w, h, time) {
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, w, h);
   const cx = w / 2, cy = h / 2;
@@ -137,47 +151,54 @@ function drawPrimeSpiral(ctx, w, h) {
     const y = cy + r * Math.sin(angle);
     if (x < 0 || x > w || y < 0 || y > h) continue;
     const hue = (n * 0.06) % 360;
-    ctx.fillStyle = \`hsla(\${hue}, 80%, 60%, 0.8)\`;
-    ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'hsla(' + hue + ', 80%, 60%, 0.8)';
+    ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
   }
 }`,
     animate: false,
   },
 
   'cmo2qvu9j0003nrxxgwlrqjd5': {
+    // Flow Field
     type: 'canvas2d',
     setup: `
-// Simple Perlin-like noise
 function noise(x, y) {
   const ix = Math.floor(x), iy = Math.floor(y);
   const fx = x - ix, fy = y - iy;
-  const sx = fx*fx*(3-2*fx), sy = fy*fy*(3-2*fy);
-  function hash(a, b) { let h = a*374761393 + b*668265263; h = (h^(h>>13))*1274126177; return (h&0x7fffffff)/0x7fffffff; }
-  const n00 = hash(ix, iy), n10 = hash(ix+1, iy);
-  const n01 = hash(ix, iy+1), n11 = hash(ix+1, iy+1);
-  return (n00*(1-sx)+n10*sx)*(1-sy) + (n01*(1-sx)+n11*sx)*sy;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  function hash(a, b) { let h = a * 374761393 + b * 668265263; h = (h ^ (h >> 13)) * 1274126177; return (h & 0x7fffffff) / 0x7fffffff; }
+  const n00 = hash(ix, iy), n10 = hash(ix + 1, iy);
+  const n01 = hash(ix, iy + 1), n11 = hash(ix + 1, iy + 1);
+  return (n00 * (1 - sx) + n10 * sx) * (1 - sy) + (n01 * (1 - sx) + n11 * sx) * sy;
 }
 const pts = [];
-for (let i = 0; i < 600; i++) {
-  pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height,
-    prevX: 0, prevY: 0, speed: Math.random()*1.5+0.5 });
+function initFlowField(w, h) {
+  pts.length = 0;
+  for (let i = 0; i < 600; i++) {
+    pts.push({
+      x: Math.random() * w, y: Math.random() * h,
+      prevX: 0, prevY: 0,
+      speed: Math.random() * 1.5 + 0.5
+    });
+  }
 }
 let zoff = 0;
-function draw() {
+function render(ctx, w, h, time) {
+  if (pts.length === 0) initFlowField(w, h);
   ctx.fillStyle = 'rgba(8,8,16,0.05)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, w, h);
   zoff += 0.003;
   for (const p of pts) {
-    const angle = noise(p.x*0.005, p.y*0.005 + zoff) * Math.PI * 4;
+    const angle = noise(p.x * 0.005, p.y * 0.005 + zoff) * Math.PI * 4;
     p.prevX = p.x; p.prevY = p.y;
     p.x += Math.cos(angle) * p.speed;
     p.y += Math.sin(angle) * p.speed;
-    if (p.x<0||p.x>canvas.width||p.y<0||p.y>canvas.height) {
-      p.x = Math.random()*canvas.width; p.y = Math.random()*canvas.height;
+    if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
+      p.x = Math.random() * w; p.y = Math.random() * h;
       p.prevX = p.x; p.prevY = p.y;
     }
     const hue = (angle / Math.PI * 60 + 180) % 360;
-    ctx.strokeStyle = \`hsla(\${hue}, 70%, 55%, 0.3)\`;
+    ctx.strokeStyle = 'hsla(' + hue + ', 70%, 55%, 0.3)';
     ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.moveTo(p.prevX, p.prevY); ctx.lineTo(p.x, p.y); ctx.stroke();
   }
@@ -185,8 +206,12 @@ function draw() {
     animate: true,
   },
 
-  // ---- GLSL SHADERS ----
+  // ============================================================
+  //  WEBGL SHADERS
+  // ============================================================
+
   'cmo2qvu9i0002nrxx9lwmrxhx': {
+    // Plasma Shader
     type: 'webgl',
     setup: `precision mediump float;
 uniform float u_time;
@@ -211,6 +236,7 @@ void main() {
   },
 
   'cmo2qvu9o000anrxxz3y7ww3g': {
+    // Aurora Borealis
     type: 'webgl',
     setup: `precision highp float;
 uniform float u_time;
@@ -255,46 +281,56 @@ void main() {
     animate: true,
   },
 
-  // ---- CSS ----
+  // ============================================================
+  //  CSS ANIMATIONS
+  // ============================================================
+
   'cmo2qvu9p000bnrxxgl2400fh': {
+    // Easing Collection
     type: 'css',
     setup: `
-:root {
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-overshoot: cubic-bezier(0.22, 1.8, 0.36, 1);
-  --ease-dramatic: cubic-bezier(0.11, 0, 0.5, 0);
-  --ease-liquid: cubic-bezier(0.45, 0, 0.15, 1);
-}
-body { background: #0f0f17; color: #e0e0e0; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; overflow: hidden; }
+body { background: #0f0f17; color: #e0e0e0; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; overflow: hidden; margin: 0; }
 .row { display: flex; gap: 24px; align-items: center; }
 .box { width: 36px; height: 36px; border-radius: 8px; }
-.b1 { background: #f59e0b; animation: a1 2s var(--ease-spring) infinite alternate; }
-.b2 { background: #ec4899; animation: a2 2.5s var(--ease-out-expo) infinite alternate; }
-.b3 { background: #8b5cf6; animation: a3 3s var(--ease-overshoot) infinite alternate; }
-.b4 { background: #06b6d4; animation: a4 2s var(--ease-liquid) infinite alternate; }
+.b1 { background: #f59e0b; animation: a1 2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate; }
+.b2 { background: #ec4899; animation: a2 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate; }
+.b3 { background: #8b5cf6; animation: a3 3s cubic-bezier(0.22, 1.8, 0.36, 1) infinite alternate; }
+.b4 { background: #06b6d4; animation: a4 2s cubic-bezier(0.45, 0, 0.15, 1) infinite alternate; }
 .bar-wrap { display: flex; gap: 6px; align-items: flex-end; height: 40px; }
 .bar { width: 8px; border-radius: 4px 4px 0 0; background: linear-gradient(to top, #f59e0b, #ec4899); }
-.bar:nth-child(1) { animation: grow 1.5s var(--ease-out-expo) infinite alternate; }
-.bar:nth-child(2) { animation: grow 1.8s 0.1s var(--ease-overshoot) infinite alternate; }
-.bar:nth-child(3) { animation: grow 2s 0.2s var(--ease-spring) infinite alternate; }
-.bar:nth-child(4) { animation: grow 1.6s 0.3s var(--ease-liquid) infinite alternate; }
-.bar:nth-child(5) { animation: grow 2.2s 0.15s var(--ease-in-expo) infinite alternate; }
+.bar:nth-child(1) { animation: grow 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate; }
+.bar:nth-child(2) { animation: grow 1.8s 0.1s cubic-bezier(0.22, 1.8, 0.36, 1) infinite alternate; }
+.bar:nth-child(3) { animation: grow 2s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate; }
+.bar:nth-child(4) { animation: grow 1.6s 0.3s cubic-bezier(0.45, 0, 0.15, 1) infinite alternate; }
+.bar:nth-child(5) { animation: grow 2.2s 0.15s cubic-bezier(0.7, 0, 0.84, 0) infinite alternate; }
 .label { font-size: 9px; color: #666; letter-spacing: 1px; text-transform: uppercase; }
 @keyframes a1 { from { transform: translateX(-20px) rotate(0deg); } to { transform: translateX(20px) rotate(180deg); } }
 @keyframes a2 { from { transform: scale(0.6); opacity: 0.4; } to { transform: scale(1.2); opacity: 1; } }
 @keyframes a3 { from { transform: translateY(10px) skewX(0deg); } to { transform: translateY(-10px) skewX(10deg); } }
 @keyframes a4 { from { border-radius: 8px; transform: rotate(0deg); } to { border-radius: 50%; transform: rotate(90deg); } }
 @keyframes grow { from { height: 10px; } to { height: 40px; } }
-`,
+<div class="row">
+  <div class="box b1"></div>
+  <div class="box b2"></div>
+  <div class="box b3"></div>
+  <div class="box b4"></div>
+</div>
+<div class="bar-wrap">
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+</div>
+<div class="label">easing curves</div>`,
     animate: true,
   },
 
   'cmo2qvu9l0006nrxxoc567sov': {
+    // CSS Galaxy
     type: 'css',
     setup: `
-body { background: #050510; overflow: hidden; height: 100vh; }
+body { background: #050510; overflow: hidden; height: 100vh; margin: 0; }
 .galaxy {
   position: absolute; top: 50%; left: 50%;
   width: 2px; height: 2px; background: transparent;
@@ -335,44 +371,31 @@ body { background: #050510; overflow: hidden; height: 100vh; }
   border-radius: 50%;
   background: radial-gradient(circle, rgba(180,140,255,0.15) 0%, transparent 70%);
 }
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes rotate { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes pulse1 { from { opacity: 0.6; } to { opacity: 1; } }
 @keyframes pulse2 { from { opacity: 1; } to { opacity: 0.6; } }
-<div class="galaxy"></div><div class="center-glow"></div>
-`,
+<div class="galaxy"></div><div class="center-glow"></div>`,
     animate: true,
   },
 
-  // ---- STATIC (non-browser languages) ----
-  'cmo2qvu9j0004nrxxp3kgq0y4': { type: 'static', setup: 'Haskell' },
-  'cmo2qvu9n0009nrxxhim874py': { type: 'static', setup: 'Python' },
-  'cmo2qvu9m0007nrxxsfevba4d': { type: 'static', setup: 'Rust' },
+  // ============================================================
+  //  STATIC — non-browser languages (Haskell, Python, Rust)
+  // ============================================================
+
+  'cmo2qvu9j0004nrxxp3kgq0y4': { type: 'static', setup: 'Haskell', animate: false },
+  'cmo2qvu9n0009nrxxhim874py': { type: 'static', setup: 'Python', animate: false },
+  'cmo2qvu9m0007nrxxsfevba4d': { type: 'static', setup: 'Rust', animate: false },
 };
 
-function generateCanvas2dHTML(setupCode: string, animate: boolean): string {
-  const drawCall = animate
-    ? `
-let animId;
-function loop(t) {
-  ${setupCode.includes('function draw') ? '' : ''}
-  const time = t / 1000;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ${setupCode.includes('function draw') ? 'draw(ctx, canvas.width, canvas.height, time);' : setupCode}
-  animId = requestAnimationFrame(loop);
-}
-animId = requestAnimationFrame(loop);
-`
-    : `ctx.clearRect(0, 0, canvas.width, canvas.height);\n${setupCode}`;
+// ============================================================
+//  HTML GENERATORS
+// ============================================================
 
-  // Check if setup defines named functions that need calling
-  let initCode = drawCall;
-  if (setupCode.includes('function drawPrimeSpiral')) {
-    initCode = setupCode + '\ndrawPrimeSpiral(ctx, canvas.width, canvas.height);';
-  } else if (setupCode.includes('function drawNeonGrid')) {
-    initCode = `let animId;\nfunction loop(t) {\n  ${setupCode}\n  drawNeonGrid(ctx, canvas.width, canvas.height, t/1000);\n  animId = requestAnimationFrame(loop);\n}\nanimId = requestAnimationFrame(loop);`;
-  } else if (setupCode.includes('function drawTree')) {
-    initCode = `let animId;\nfunction loop() {\n  ctx.clearRect(0, 0, canvas.width, canvas.height);\n  ctx.fillStyle = '#0a0f0a';\n  ctx.fillRect(0, 0, canvas.width, canvas.height);\n  ${setupCode}\n  drawTree(ctx, canvas.width/2, canvas.height*0.85, canvas.height*0.22, -90, 10);\n  animId = requestAnimationFrame(loop);\n}\nanimId = requestAnimationFrame(loop);`;
-  }
+function generateCanvas2dHTML(setupCode: string, animate: boolean): string {
+  // All canvas2d templates define: init vars + function render(ctx, w, h, time) {}
+  const loopCode = animate
+    ? `let _animId;\nfunction _loop(t) {\n  render(ctx, canvas.width, canvas.height, t / 1000);\n  _animId = requestAnimationFrame(_loop);\n}\n_animId = requestAnimationFrame(_loop);`
+    : `render(ctx, canvas.width, canvas.height, 0);`;
 
   return `<!DOCTYPE html><html><head><style>
 *{margin:0;padding:0}body{background:#0a0a0f;overflow:hidden}
@@ -380,49 +403,55 @@ canvas{display:block;width:100%;height:100%}
 </style></head><body>
 <canvas id="c"></canvas>
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 resize(); window.addEventListener('resize', resize);
-${initCode}
+${setupCode}
+${loopCode}
 </script></body></html>`;
 }
 
 function generateWebGLHTML(fragShader: string): string {
   return `<!DOCTYPE html><html><head><style>
-*{margin:0;padding:0}body{overflow:hidden}
+*{margin:0;padding:0}body{overflow:hidden;background:#000}
 canvas{display:block;width:100%;height:100%}
 </style></head><body>
 <canvas id="c"></canvas>
 <script>
-const canvas = document.getElementById('c');
-const gl = canvas.getContext('webgl');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; gl.viewport(0,0,canvas.width,canvas.height); }
+var canvas = document.getElementById('c');
+var gl = canvas.getContext('webgl');
+if (!gl) { document.body.innerHTML = '<p style="color:#888;padding:20px;font-family:sans-serif">WebGL not supported</p>'; }
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; if (gl) gl.viewport(0, 0, canvas.width, canvas.height); }
 resize(); window.addEventListener('resize', resize);
 
-const vs = 'attribute vec2 a_position; void main(){ gl_Position = vec4(a_position, 0.0, 1.0); }';
-const fs = \`${fragShader}\`;
+var vs = 'attribute vec2 a_position; void main(){ gl_Position = vec4(a_position, 0.0, 1.0); }';
+var fs = \`${fragShader}\`;
 
 function compile(src, type) {
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src); gl.compileShader(s); return s;
+  var s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; }
+  return s;
 }
-const prog = gl.createProgram();
+var prog = gl.createProgram();
 gl.attachShader(prog, compile(vs, gl.VERTEX_SHADER));
 gl.attachShader(prog, compile(fs, gl.FRAGMENT_SHADER));
-gl.linkProgram(prog); gl.useProgram(prog);
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(prog)); }
+gl.useProgram(prog);
 
-const buf = gl.createBuffer();
+var buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-const pos = gl.getAttribLocation(prog, 'a_position');
+var pos = gl.getAttribLocation(prog, 'a_position');
 gl.enableVertexAttribArray(pos);
 gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
-const ut = gl.getUniformLocation(prog, 'u_time');
-const ur = gl.getUniformLocation(prog, 'u_resolution');
+var ut = gl.getUniformLocation(prog, 'u_time');
+var ur = gl.getUniformLocation(prog, 'u_resolution');
 function loop(t) {
-  gl.uniform1f(ut, t/1000);
+  gl.uniform1f(ut, t / 1000);
   gl.uniform2f(ur, canvas.width, canvas.height);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   requestAnimationFrame(loop);
@@ -431,26 +460,29 @@ requestAnimationFrame(loop);
 </script></body></html>`;
 }
 
-function generateCSSHTML(cssCode: string): string {
-  // Extract any HTML from the last line if it contains tags
-  let htmlContent = '';
-  const lines = cssCode.trim().split('\n');
-  const lastLine = lines[lines.length - 1].trim();
-  if (lastLine.includes('<div') || lastLine.includes('<span')) {
-    htmlContent = lastLine;
-    // Remove from CSS
-    cssCode = lines.slice(0, -1).join('\n');
+function generateCSSHTML(cssAndHtml: string): string {
+  // Split: everything before the first HTML tag is CSS, the rest is HTML
+  const htmlTagMatch = cssAndHtml.match(/(<div[\s>]|<span[\s>])/);
+  let css = cssAndHtml;
+  let html = '';
+  if (htmlTagMatch) {
+    const idx = cssAndHtml.indexOf(htmlTagMatch[1]);
+    css = cssAndHtml.substring(0, idx);
+    html = cssAndHtml.substring(idx);
   }
-  return `<!DOCTYPE html><html><head><style>${cssCode}</style></head><body>${htmlContent}</body></html>`;
+  return `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}</body></html>`;
 }
 
-function generateStaticHTML(language: string, snippet: { title: string; description: string; code: string; language: string; category: string; author: string }): string {
+function generateStaticHTML(language: string, snippet: {
+  title: string; description: string; code: string;
+  language: string; category: string; author: string;
+}): string {
   const langColors: Record<string, string> = {
     Haskell: '#5e5086', Python: '#3776ab', Rust: '#dea584',
   };
   const color = langColors[language] || '#666';
   const codeLines = snippet.code.split('\n').slice(0, 12).map(line =>
-    line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   ).join('\n');
 
   return `<!DOCTYPE html><html><head><style>
@@ -470,6 +502,10 @@ body{background:#0c0c14;display:flex;align-items:center;justify-content:center;h
 </div>
 </body></html>`;
 }
+
+// ============================================================
+//  PUBLIC API
+// ============================================================
 
 export function generatePreviewHTML(snippet: {
   id: string;
