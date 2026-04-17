@@ -1,0 +1,108 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Code2, Palette, Layers } from 'lucide-react';
+
+interface Stats {
+  totalSnippets: number;
+  languages: number;
+  categories: number;
+}
+
+export function HeroSection() {
+  const [stats, setStats] = useState<Stats>({
+    totalSnippets: 0,
+    languages: 0,
+    categories: 0,
+  });
+  const mountedRef = useRef(false);
+  const [hasStats, setHasStats] = useState(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetch('/api/snippets')
+      .then((res) => res.json())
+      .then((data) => {
+        const languages = new Set(data.map((s: { language: string }) => s.language));
+        const categories = new Set(data.map((s: { category: string }) => s.category));
+        setStats({
+          totalSnippets: data.length,
+          languages: languages.size,
+          categories: categories.size,
+        });
+        setHasStats(true);
+      })
+      .catch(() => {});
+  }, []);
+
+  const statItems = [
+    { icon: Code2, label: 'Snippets', value: stats.totalSnippets },
+    { icon: Palette, label: 'Languages', value: stats.languages },
+    { icon: Layers, label: 'Categories', value: stats.categories },
+  ];
+
+  return (
+    <section className="relative pt-24 pb-12 sm:pt-32 sm:pb-16 overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 dark:from-primary/10 dark:via-transparent dark:to-primary/10" />
+        <div
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
+        >
+          Where{' '}
+          <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+            Code
+          </span>{' '}
+          Meets{' '}
+          <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-pink-500 bg-clip-text text-transparent">
+            Art
+          </span>
+        </motion.h1>
+
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+          className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+        >
+          A curated gallery of beautiful code — algorithms, shaders, generative art,
+          and creative coding masterpieces
+        </motion.p>
+
+        {/* Stats */}
+        {hasStats && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+            className="mt-8 sm:mt-10 flex items-center justify-center gap-6 sm:gap-10"
+          >
+            {statItems.map((stat) => (
+              <div key={stat.label} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <stat.icon className="size-4 text-primary" />
+                <span className="font-semibold text-foreground">{stat.value}</span>
+                <span>{stat.label}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </section>
+  );
+}
