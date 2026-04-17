@@ -383,12 +383,225 @@ body { background: #050510; overflow: hidden; height: 100vh; margin: 0; }
   },
 
   // ============================================================
-  //  STATIC — non-browser languages (Haskell, Python, Rust)
+  //  HASKELL — Quicksort visualizer
   // ============================================================
 
-  'cmo2qvu9j0004nrxxp3kgq0y4': { type: 'static', setup: 'Haskell', animate: false },
-  'cmo2qvu9n0009nrxxhim874py': { type: 'static', setup: 'Python', animate: false },
-  'cmo2qvu9m0007nrxxsfevba4d': { type: 'static', setup: 'Rust', animate: false },
+  'cmo2qvu9j0004nrxxp3kgq0y4': {
+    type: 'canvas2d',
+    setup: `
+var _arr = null;
+var _comparing = -1;
+var _sorted = -1;
+var _phase = 0;
+var _timer = 0;
+function _initSort(w, h) {
+  _arr = [];
+  var count = Math.floor(w / 6);
+  for (var i = 0; i < count; i++) _arr.push(Math.random() * 0.85 + 0.15);
+  _comparing = -1; _sorted = -1; _phase = 0; _timer = 0;
+}
+function _qs(arr, lo, hi, steps) {
+  if (lo >= hi || steps.length > 200) return steps;
+  var pivot = arr[hi]; var i = lo;
+  steps.push({t:'p', v: hi});
+  for (var j = lo; j < hi; j++) {
+    steps.push({t:'c', a: j, b: hi});
+    if (arr[j] <= pivot) {
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      steps.push({t:'s', a: i, b: j});
+      i++;
+    }
+  }
+  var tmp2 = arr[i]; arr[i] = arr[hi]; arr[hi] = tmp2;
+  steps.push({t:'s', a: i, b: hi});
+  steps.push({t:'d', v: i});
+  _qs(arr, lo, i - 1, steps);
+  _qs(arr, i + 1, hi, steps);
+  return steps;
+}
+var _steps = null;
+var _stepIdx = 0;
+var _renderArr = null;
+function render(ctx, w, h, time) {
+  if (!_arr) {
+    _initSort(w, h);
+    _renderArr = _arr.slice();
+    var sortArr = _arr.slice();
+    _steps = _qs(sortArr, 0, sortArr.length - 1, []);
+    _stepIdx = 0; _comparing = -1;
+  }
+  ctx.fillStyle = '#0c0c14';
+  ctx.fillRect(0, 0, w, h);
+  var n = _renderArr.length;
+  var barW = w / n;
+  var maxH = h * 0.85;
+  _timer += 1;
+  if (_timer % 2 === 0 && _stepIdx < _steps.length) {
+    var step = _steps[_stepIdx++];
+    if (step.t === 'c') _comparing = step.a;
+    else if (step.t === 's') {
+      var tmp = _renderArr[step.a]; _renderArr[step.a] = _renderArr[step.b]; _renderArr[step.b] = tmp;
+      _comparing = -1;
+    } else if (step.t === 'd') _comparing = -1;
+    if (_stepIdx >= _steps.length) { _comparing = -1; _sorted = 1; }
+  }
+  for (var i = 0; i < n; i++) {
+    var barH = _renderArr[i] * maxH;
+    var hue = 160 + _renderArr[i] * 80;
+    var light = _comparing === i ? 70 : 45;
+    ctx.fillStyle = 'hsl(' + hue + ', 75%, ' + light + '%)';
+    ctx.fillRect(i * barW + 0.5, h - barH, barW - 1, barH);
+  }
+  if (_sorted === 1 && _stepIdx >= _steps.length) {
+    setTimeout(function() { _initSort(w, h); _renderArr = _arr.slice(); var sortArr = _arr.slice(); _steps = _qs(sortArr, 0, sortArr.length - 1, []); _stepIdx = 0; _sorted = 0; }, 2000);
+    _sorted = 2;
+  }
+}`,
+    animate: true,
+  },
+
+  // ============================================================
+  //  PYTHON — Wave Function Collapse visualizer
+  // ============================================================
+
+  'cmo2qvu9n0009nrxxhim874py': {
+    type: 'canvas2d',
+    setup: `
+var _grid = null;
+var _gw = 0; var _gh = 0; var _cellSize = 12;
+var _gen = 0;
+var _colors = ['#f59e0b','#ec4899','#8b5cf6','#06b6d4','#34d399','#fb923c','#a78bfa'];
+function _initWFC(w, h) {
+  _gw = Math.floor(w / _cellSize);
+  _gh = Math.floor(h / _cellSize);
+  _grid = [];
+  for (var y = 0; y < _gh; y++) {
+    _grid[y] = [];
+    for (var x = 0; x < _gw; x++) {
+      _grid[y][x] = { options: [0,1,2,3,4,5,6], collapsed: false };
+    }
+  }
+  _gen = 0;
+}
+function _propagate(gx, gy) {
+  var tile = _grid[gy][gx].options[0];
+  var dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+  var allowed = {
+    0: [[0,1,2,3,4,5,6],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6]],
+    1: [[0,1,2,4,5],[0,1,2,4,5],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6]],
+    2: [[1,2,3,5,6],[0,2,3,4,6],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6]],
+    3: [[3,4,5,6],[3,4,5,6],[0,1,3,4,5,6],[0,2,3,4,5,6]],
+    4: [[0,2,4,6],[1,3,5,6],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6]],
+    5: [[0,1,5,6],[2,3,4,5,6],[0,1,2,3,4,5,6],[0,1,2,3,4,5,6]],
+    6: [[0,1,2,3,4,5,6],[0,1,2,3,4,5,6],[2,4,5,6],[1,3,5,6]]
+  };
+  for (var d = 0; d < 4; d++) {
+    var nx = gx + dirs[d][0]; var ny = gy + dirs[d][1];
+    if (nx >= 0 && nx < _gw && ny >= 0 && ny < _gh && !_grid[ny][nx].collapsed) {
+      var cell = _grid[ny][nx];
+      var valid = allowed[tile][d];
+      cell.options = cell.options.filter(function(v) { return valid.indexOf(v) >= 0; });
+      if (cell.options.length === 0) cell.options = [Math.floor(Math.random() * 7)];
+    }
+  }
+}
+function _collapseStep() {
+  var minOpts = 999; var mx = -1; var my = -1;
+  for (var y = 0; y < _gh; y++) for (var x = 0; x < _gw; x++) {
+    if (!_grid[y][x].collapsed && _grid[y][x].options.length > 1 && _grid[y][x].options.length < minOpts) {
+      minOpts = _grid[y][x].options.length; mx = x; my = y;
+    }
+  }
+  if (mx < 0) { var allDone = true; for (var y2 = 0; y2 < _gh; y2++) for (var x2 = 0; x2 < _gw; x2++) if (!_grid[y2][x2].collapsed) allDone = false; return allDone; }
+  var cell = _grid[my][mx];
+  var pick = cell.options[Math.floor(Math.random() * cell.options.length)];
+  cell.options = [pick]; cell.collapsed = true;
+  _propagate(mx, my);
+  return false;
+}
+function render(ctx, w, h, time) {
+  if (!_grid) _initWFC(w, h);
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, w, h);
+  var allDone = false;
+  for (var s = 0; s < 3; s++) allDone = _collapseStep();
+  for (var y = 0; y < _gh; y++) for (var x = 0; x < _gw; x++) {
+    var cell = _grid[y][x];
+    if (cell.collapsed) {
+      ctx.fillStyle = _colors[cell.options[0]];
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x * _cellSize + 1, y * _cellSize + 1, _cellSize - 2, _cellSize - 2);
+      ctx.globalAlpha = 1;
+    } else {
+      var entropy = 1 - cell.options.length / 7;
+      ctx.fillStyle = 'rgba(100,100,140,' + (0.1 + entropy * 0.3) + ')';
+      ctx.fillRect(x * _cellSize + 1, y * _cellSize + 1, _cellSize - 2, _cellSize - 2);
+    }
+  }
+  if (allDone) setTimeout(function() { _initWFC(w, h); }, 1500);
+}`,
+    animate: true,
+  },
+
+  // ============================================================
+  //  RUST — Mandelbrot zoom
+  // ============================================================
+
+  'cmo2qvu9m0007nrxxsfevba4d': {
+    type: 'canvas2d',
+    setup: `
+var _imgData = null;
+var _zoom = 1.5;
+var _cx = -0.745; var _cy = 0.186;
+var _needsRedraw = true;
+function render(ctx, w, h, time) {
+  if (!_imgData || _imgData.width !== w || _imgData.height !== h) {
+    _imgData = ctx.createImageData(w, h);
+    _needsRedraw = true;
+  }
+  if (!_needsRedraw) return;
+  _needsRedraw = false;
+  var d = _imgData.data;
+  var maxIter = 80;
+  var scale = _zoom;
+  for (var py = 0; py < h; py++) {
+    for (var px = 0; px < w; px++) {
+      var x0 = (px - w / 2) / (w / 4) / scale + _cx;
+      var y0 = (py - h / 2) / (h / 4) / scale + _cy;
+      var x = 0; var y = 0; var iter = 0;
+      while (x * x + y * y <= 4 && iter < maxIter) {
+        var xt = x * x - y * y + x0; y = 2 * x * y + y0; x = xt; iter++;
+      }
+      var idx = (py * w + px) * 4;
+      if (iter === maxIter) {
+        d[idx] = 8; d[idx+1] = 8; d[idx+2] = 16;
+      } else {
+        var t = iter / maxIter;
+        var hue = t * 360 + time * 20;
+        var r = 0, g = 0, b = 0;
+        var hi = hue / 60; var f = hi - Math.floor(hi);
+        switch (Math.floor(hi) % 6) {
+          case 0: r=1; g=f; b=0; break;
+          case 1: r=1-f; g=1; b=0; break;
+          case 2: r=0; g=1; b=f; break;
+          case 3: r=0; g=1-f; b=1; break;
+          case 4: r=f; g=0; b=1; break;
+          case 5: r=1; g=0; b=1-f; break;
+        }
+        d[idx] = Math.floor(r * 200 + 30);
+        d[idx+1] = Math.floor(g * 200 + 30);
+        d[idx+2] = Math.floor(b * 200 + 30);
+      }
+      d[idx+3] = 255;
+    }
+  }
+  ctx.putImageData(_imgData, 0, 0);
+  _zoom *= 1.008;
+  if (_zoom > 50000) { _zoom = 1.5; }
+  _needsRedraw = true;
+}`,
+    animate: true,
+  },
 };
 
 // ============================================================
