@@ -140,26 +140,28 @@ function render(ctx, w, h, time) {
     setup: `
 function isPrime(n) {
   if (n < 2) return false;
-  for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+  for (var i = 2; i * i <= n; i++) if (n % i === 0) return false;
   return true;
 }
 function render(ctx, w, h, time) {
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, w, h);
-  const cx = w / 2, cy = h / 2;
-  for (let n = 2; n < 5000; n++) {
+  var cx = w / 2, cy = h / 2;
+  var rot = time * 0.1;
+  var scale = Math.min(w, h) / 200;
+  for (var n = 2; n < 5000; n++) {
     if (!isPrime(n)) continue;
-    const angle = n * 2.399963;
-    const r = Math.sqrt(n) * (Math.min(w, h) / 200);
-    const x = cx + r * Math.cos(angle);
-    const y = cy + r * Math.sin(angle);
+    var angle = n * 2.399963 + rot;
+    var r = Math.sqrt(n) * scale;
+    var x = cx + r * Math.cos(angle);
+    var y = cy + r * Math.sin(angle);
     if (x < 0 || x > w || y < 0 || y > h) continue;
-    const hue = (n * 0.06) % 360;
-    ctx.fillStyle = 'hsla(' + hue + ', 80%, 60%, 0.8)';
+    var hue = (n * 0.06 + time * 10) % 360;
+    ctx.fillStyle = 'hsla(' + hue + ', 80%, 60%, 0.85)';
     ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill();
   }
 }`,
-    animate: false,
+    animate: true,
   },
 
   'cmo2qvu9j0003nrxxgwlrqjd5': {
