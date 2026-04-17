@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { z } from 'zod';
+import { Prisma } from '@prisma/client';
+import { rateLimit } from '@/lib/rate-limit';
 
-// Select only fields needed for list view (O(1) per row instead of full code blobs)
-const LIST_SELECT = {
-  id: true,
-  title: true,
-  description: true,
-  language: true,
-  category: true,
-  author: true,
-  isFeatured: true,
-  likes: true,
-  createdAt: true,
-};
+// Rate limit: 20 create requests per minute per IP
+const CREATE_LIMIT = 20;
+const CREATE_WINDOW_MS = 60_000;
 
-// For code preview in cards: only first 200 chars
+// Rate limit: 60 read requests per minute per IP
+const READ_LIMIT = 60;
+const READ_WINDOW_MS = 60_000;
+
 const CARD_SELECT = {
   id: true,
   title: true,
@@ -28,8 +25,29 @@ const CARD_SELECT = {
   code: true,
 };
 
-// Stats endpoint — lightweight aggregation, O(1) vs fetching all rows
+const createSnippetSchema = z.object({
+  title: z.string().min(1).max(100),
+  code: z.string().min(10).max(50_000),
+  language: z.enum(['JavaScript', 'Python', 'GLSL', 'Rust', 'Haskell', 'CSS', 'TypeScript']),
+  category: z.enum([
+    'Generative Art',
+    'Algorithms',
+    'Shaders',
+    'Data Visualization',
+    'Creative Coding',
+    'Interactive',
+    'UI/UX',
+  ]),
+  author: z.string().min(1).max(50).optional(),
+  description: z.string().max(500).optional(),
+});
+
 export async function GET(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (rateLimit(ip + ':read', READ_LIMIT, READ_WINDOW_MS)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const language = searchParams.get('language');
@@ -38,7 +56,7 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured');
     const statsOnly = searchParams.get('stats') === 'true';
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.CodeSnippetWhereInput = {};
 
     if (language && language !== 'All') {
       where.language = language;
@@ -55,11 +73,9 @@ export async function GET(request: NextRequest) {
         { description: { contains: search } },
         { author: { contains: search } },
       ];
-      // Removed code search from list view — O(n) scan on large text field
-      // Full-text code search available via detail endpoint
     }
 
-    // Stats mode: aggregate instead of fetching all rows — O(1) DB work
+    // Stats mode: aggregate instead of fetching all rows
     if (statsOnly) {
       const [total, languages, categories] = await Promise.all([
         db.codeSnippet.count({ where }),
@@ -84,23 +100,32 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(snippets);
-  } catch {
+  } catch (error) {
+    console.error('[GET /api/snippets]', error);
     return NextResponse.json({ error: 'Failed to fetch snippets' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (rateLimit(ip + ':create', CREATE_LIMIT, CREATE_WINDOW_MS)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
-    const { title, description, code, language, category, author, isFeatured } = body;
+    const result = createSnippetSchema.safeParse(body);
 
-    if (!title || !code || !language || !category) {
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Title, code, language, and category are required' },
+        { error: 'Validation failed', details: result.error.issues },
         { status: 400 }
       );
     }
 
+    const { title, description, code, language, category, author } = result.data;
+
+    // isFeatured is NEVER accepted from user input - only settable via seed/admin
     const snippet = await db.codeSnippet.create({
       data: {
         title,
@@ -109,12 +134,13 @@ export async function POST(request: NextRequest) {
         language,
         category,
         author: author || 'Anonymous',
-        isFeatured: isFeatured || false,
+        isFeatured: false,
       },
     });
 
     return NextResponse.json(snippet, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('[POST /api/snippets]', error);
     return NextResponse.json({ error: 'Failed to create snippet' }, { status: 500 });
   }
 }

@@ -607,6 +607,19 @@ function render(ctx, w, h, time) {
 };
 
 // ============================================================
+//  UTILITIES
+// ============================================================
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ============================================================
 //  HTML GENERATORS
 // ============================================================
 
@@ -701,7 +714,7 @@ function generateStaticHTML(language: string, snippet: {
   };
   const color = langColors[language] || '#666';
   const codeLines = snippet.code.split('\n').slice(0, 12).map(line =>
-    line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    escapeHtml(line)
   ).join('\n');
 
   return `<!DOCTYPE html><html><head><style>
@@ -714,9 +727,9 @@ body{background:#0c0c14;display:flex;align-items:center;justify-content:center;h
 .code{background:rgba(0,0,0,0.4);border-radius:8px;padding:14px;font-size:11px;line-height:1.7;overflow:hidden;max-height:200px;color:#aab;border-left:2px solid ${color}66}
 </style></head><body>
 <div class="card">
-  <div class="badge">${snippet.language}</div>
-  <div class="title">${snippet.title}</div>
-  <div class="desc">${snippet.description}</div>
+  <div class="badge">${escapeHtml(snippet.language)}</div>
+  <div class="title">${escapeHtml(snippet.title)}</div>
+  <div class="desc">${escapeHtml(snippet.description)}</div>
   <pre class="code">${codeLines}</pre>
 </div>
 </body></html>`;

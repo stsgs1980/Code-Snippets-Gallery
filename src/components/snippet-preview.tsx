@@ -3,8 +3,26 @@
 import { useRef, useEffect, memo } from 'react';
 import { generatePreviewHTML } from '@/lib/preview-renderer';
 
-// Module-level HTML cache: avoid regenerating for the same snippet
+// LRU HTML cache: bounded to MAX_CACHE_SIZE entries
+const MAX_CACHE_SIZE = 100;
 const htmlCache = new Map<string, string>();
+
+function getCachedHTML(id: string): string | undefined {
+  const html = htmlCache.get(id);
+  if (html) {
+    htmlCache.delete(id);
+    htmlCache.set(id, html);
+  }
+  return html;
+}
+
+function setCachedHTML(id: string, html: string) {
+  if (htmlCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = htmlCache.keys().next().value;
+    if (firstKey) htmlCache.delete(firstKey);
+  }
+  htmlCache.set(id, html);
+}
 
 interface SnippetPreviewProps {
   snippet: {
@@ -27,19 +45,22 @@ export const SnippetPreview = memo(function SnippetPreview({ snippet, className 
     if (!iframe) return;
 
     // Cache: generate HTML once per snippet
-    let html = htmlCache.get(snippet.id);
+    let html = getCachedHTML(snippet.id);
     if (!html) {
       html = generatePreviewHTML(snippet);
-      htmlCache.set(snippet.id, html);
+      setCachedHTML(snippet.id, html);
     }
 
-    // Use srcdoc — works reliably in sandboxed iframes (no cross-origin blob URL issues)
+    // Use srcdoc - works reliably in sandboxed iframes (no cross-origin blob URL issues)
     iframe.srcdoc = html;
   }, [snippet.id]);
 
   return (
     <iframe
       ref={iframeRef}
+      // Security note: allow-scripts + allow-same-origin is required for WebGL.
+      // User input is escaped via escapeHtml() in preview-renderer.ts to prevent XSS.
+      // For full isolation, consider CSP headers or a web worker approach in production.
       sandbox="allow-scripts allow-same-origin"
       className={`w-full h-full border-0 ${className || ''}`}
       title={`Preview: ${snippet.title}`}

@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { rateLimit } from '@/lib/rate-limit';
+
+// Rate limit: 30 delete requests per minute per IP
+const DELETE_LIMIT = 30;
+const DELETE_WINDOW_MS = 60_000;
+
+// Rate limit: 60 read requests per minute per IP
+const READ_LIMIT = 60;
+const READ_WINDOW_MS = 60_000;
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (rateLimit(ip + ':read', READ_LIMIT, READ_WINDOW_MS)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   try {
     const { id } = await params;
     const snippet = await db.codeSnippet.findUnique({
@@ -16,23 +30,34 @@ export async function GET(
     }
 
     return NextResponse.json(snippet);
-  } catch {
+  } catch (error) {
+    console.error('[GET /api/snippets/:id]', error);
     return NextResponse.json({ error: 'Failed to fetch snippet' }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (rateLimit(ip + ':delete', DELETE_LIMIT, DELETE_WINDOW_MS)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   try {
     const { id } = await params;
-    await db.codeSnippet.delete({
-      where: { id },
-    });
 
+    // Check existence first to return proper 404
+    const existing = await db.codeSnippet.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Snippet not found' }, { status: 404 });
+    }
+
+    await db.codeSnippet.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error('[DELETE /api/snippets/:id]', error);
     return NextResponse.json({ error: 'Failed to delete snippet' }, { status: 500 });
   }
 }

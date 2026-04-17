@@ -54,6 +54,7 @@ export function Header({ onAddClick }: HeaderProps) {
               size="sm"
               onClick={onAddClick}
               className="gap-1.5"
+              aria-label={t('header.addSnippet')}
             >
               <Plus className="size-4" />
               <span className="hidden sm:inline" suppressHydrationWarning>{t('header.addSnippet')}</span>
