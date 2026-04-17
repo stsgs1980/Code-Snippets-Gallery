@@ -1,7 +1,10 @@
 'use client';
 
 import { useRef, useEffect, memo } from 'react';
-import { generatePreviewHTML, hasInteractivePreview } from '@/lib/preview-renderer';
+import { generatePreviewHTML } from '@/lib/preview-renderer';
+
+// Module-level cache: avoid re-creating Blobs for the same snippet
+const blobCache = new Map<string, string>();
 
 interface SnippetPreviewProps {
   snippetId: string;
@@ -24,17 +27,21 @@ export const SnippetPreview = memo(function SnippetPreview({ snippet, className 
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const html = generatePreviewHTML(snippet);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+    // Cache hit: reuse existing blob URL — zero allocations
+    let url = blobCache.get(snippet.id);
+    if (!url) {
+      const html = generatePreviewHTML(snippet);
+      const blob = new Blob([html], { type: 'text/html' });
+      url = URL.createObjectURL(blob);
+      blobCache.set(snippet.id, url);
+    }
+
     iframe.src = url;
 
     return () => {
-      URL.revokeObjectURL(url);
+      // Don't revoke — keep in cache for revisit
     };
-  }, [snippet]);
-
-  const interactive = hasInteractivePreview(snippet.id);
+  }, [snippet.id]);
 
   return (
     <iframe

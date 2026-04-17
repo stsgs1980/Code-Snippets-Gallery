@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Code2, Palette, Layers } from 'lucide-react';
 
@@ -16,24 +16,24 @@ export function HeroSection() {
     languages: 0,
     categories: 0,
   });
-  const mountedRef = useRef(false);
   const [hasStats, setHasStats] = useState(false);
 
+  // Single lightweight aggregation request — O(1) DB work instead of fetching all rows
   useEffect(() => {
-    mountedRef.current = true;
-    fetch('/api/snippets')
+    let cancelled = false;
+    fetch('/api/snippets?stats=true')
       .then((res) => res.json())
       .then((data) => {
-        const languages = new Set(data.map((s: { language: string }) => s.language));
-        const categories = new Set(data.map((s: { category: string }) => s.category));
+        if (cancelled) return;
         setStats({
-          totalSnippets: data.length,
-          languages: languages.size,
-          categories: categories.size,
+          totalSnippets: data.total ?? 0,
+          languages: data.languages?.length ?? 0,
+          categories: data.categories?.length ?? 0,
         });
         setHasStats(true);
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const statItems = [

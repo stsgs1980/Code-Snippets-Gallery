@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Select only fields needed for list view (O(1) per row instead of full code blobs)
+const LIST_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  language: true,
+  category: true,
+  author: true,
+  isFeatured: true,
+  likes: true,
+  createdAt: true,
+};
+
+// For code preview in cards: only first 200 chars
+const CARD_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  language: true,
+  category: true,
+  author: true,
+  isFeatured: true,
+  likes: true,
+  createdAt: true,
+  code: true,
+};
+
+// Stats endpoint — lightweight aggregation, O(1) vs fetching all rows
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -8,6 +36,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
+    const statsOnly = searchParams.get('stats') === 'true';
 
     const where: Record<string, unknown> = {};
 
@@ -25,12 +54,28 @@ export async function GET(request: NextRequest) {
         { title: { contains: search } },
         { description: { contains: search } },
         { author: { contains: search } },
-        { code: { contains: search } },
       ];
+      // Removed code search from list view — O(n) scan on large text field
+      // Full-text code search available via detail endpoint
+    }
+
+    // Stats mode: aggregate instead of fetching all rows — O(1) DB work
+    if (statsOnly) {
+      const [total, languages, categories] = await Promise.all([
+        db.codeSnippet.count({ where }),
+        db.codeSnippet.groupBy({ by: ['language'], where, _count: true }),
+        db.codeSnippet.groupBy({ by: ['category'], where, _count: true }),
+      ]);
+      return NextResponse.json({
+        total,
+        languages: languages.map(l => l.language),
+        categories: categories.map(c => c.category),
+      });
     }
 
     const snippets = await db.codeSnippet.findMany({
       where,
+      select: CARD_SELECT,
       orderBy: [
         { isFeatured: 'desc' },
         { likes: 'desc' },

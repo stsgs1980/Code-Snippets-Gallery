@@ -16,8 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: 60_000,          // Cache data for 60s instead of refetching on every focus
+      gcTime: 5 * 60_000,         // Keep unused data in cache for 5 min
       retry: 1,
+      refetchOnWindowFocus: false, // Avoid redundant network requests
     },
   },
 });
