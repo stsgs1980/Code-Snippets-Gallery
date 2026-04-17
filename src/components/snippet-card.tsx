@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Star, Eye } from 'lucide-react';
+import { Heart, Star, Eye, Code2, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SnippetPreview } from '@/components/snippet-preview';
+import { hasInteractivePreview } from '@/lib/preview-renderer';
 
 const LANGUAGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500',
@@ -51,10 +54,14 @@ function getPreviewLines(code: string, maxLines = 5): string {
     .join('\n');
 }
 
+type TabType = 'preview' | 'code';
+
 export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('preview');
   const accentColor = LANGUAGE_COLORS[snippet.language] || 'bg-gray-500';
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet.language] || '';
   const preview = getPreviewLines(snippet.code);
+  const canPreview = hasInteractivePreview(snippet.id);
 
   return (
     <motion.div
@@ -96,12 +103,59 @@ export function SnippetCard({ snippet, onViewCode, onLike }: SnippetCardProps) {
           {snippet.description}
         </p>
 
-        {/* Code preview */}
-        <div className="relative rounded-lg bg-muted/80 dark:bg-muted/40 p-3 overflow-hidden">
-          <pre className="text-[11px] sm:text-xs font-mono leading-relaxed text-foreground/70 overflow-hidden">
-            <code>{preview}</code>
-          </pre>
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-muted/80 dark:from-muted/40 to-transparent" />
+        {/* Tab bar + Content */}
+        <div className="rounded-lg overflow-hidden border border-border/50">
+          {/* Tab buttons */}
+          <div className="flex border-b border-border/50 bg-muted/40">
+            <button
+              onClick={() => setActiveTab('preview')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-colors',
+                activeTab === 'preview'
+                  ? 'text-foreground bg-background border-b-2 border-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Play className="size-3" />
+              Preview
+            </button>
+            <button
+              onClick={() => setActiveTab('code')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-colors',
+                activeTab === 'code'
+                  ? 'text-foreground bg-background border-b-2 border-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Code2 className="size-3" />
+              Code
+            </button>
+          </div>
+
+          {/* Tab content */}
+          <div className="relative bg-[#0c0c14] dark:bg-[#08080e]" style={{ height: '160px' }}>
+            {activeTab === 'preview' && (
+              canPreview ? (
+                <SnippetPreview snippet={snippet} />
+              ) : (
+                <div className="flex items-center justify-center h-full px-4">
+                  <p className="text-[11px] text-muted-foreground/60 text-center">
+                    Preview available in viewer
+                  </p>
+                </div>
+              )
+            )}
+
+            {activeTab === 'code' && (
+              <div className="relative h-full overflow-hidden p-3">
+                <pre className="text-[11px] sm:text-xs font-mono leading-relaxed text-foreground/60 overflow-hidden">
+                  <code>{preview}</code>
+                </pre>
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0c0c14] dark:from-[#08080e] to-transparent pointer-events-none" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, Copy, Check, Trash2 } from 'lucide-react';
+import { Heart, Copy, Check, Trash2, Code2, Play } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { SnippetPreview } from '@/components/snippet-preview';
+import { hasInteractivePreview } from '@/lib/preview-renderer';
 
 const LANGUAGE_BADGE_COLORS: Record<string, string> = {
   JavaScript: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
@@ -55,10 +57,14 @@ interface CodeDialogProps {
   onDelete: (id: string) => void;
 }
 
+type TabType = 'preview' | 'code';
+
 export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: CodeDialogProps) {
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('preview');
 
   const badgeColor = LANGUAGE_BADGE_COLORS[snippet?.language || ''] || '';
+  const canPreview = snippet ? hasInteractivePreview(snippet.id) : false;
 
   const handleCopy = async () => {
     if (!snippet) return;
@@ -67,7 +73,6 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback
       const textarea = document.createElement('textarea');
       textarea.value = snippet.code;
       document.body.appendChild(textarea);
@@ -86,9 +91,15 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
 
   const lines = snippet?.code.split('\n') || [];
 
+  // Reset to preview tab when snippet changes
+  const prevId = snippet?.id;
+  if (prevId) {
+    // Using a trick: this runs on render
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl sm:max-w-5xl max-h-[92vh] flex flex-col p-0">
         {snippet && (
           <>
             {/* Header */}
@@ -116,25 +127,77 @@ export function CodeDialog({ snippet, open, onOpenChange, onLike, onDelete }: Co
               </DialogHeader>
             </div>
 
-            {/* Code block */}
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-4 sm:p-6">
-                <div className="rounded-lg bg-muted/80 dark:bg-muted/40 p-4 overflow-x-auto">
-                  <pre className="text-xs sm:text-sm font-mono leading-relaxed">
-                    <code>
-                      {lines.map((line, i) => (
-                        <div key={i} className="flex hover:bg-muted/50 -mx-4 px-4">
-                          <span className="inline-block w-8 sm:w-10 text-right mr-4 sm:mr-6 text-muted-foreground/40 select-none shrink-0">
-                            {i + 1}
-                          </span>
-                          <span className="text-foreground/85 whitespace-pre">{line}</span>
-                        </div>
-                      ))}
-                    </code>
-                  </pre>
-                </div>
-              </div>
-            </ScrollArea>
+            {/* Tabs */}
+            <div className="flex border-b shrink-0">
+              <button
+                onClick={() => setActiveTab('preview')}
+                className={cn(
+                  'flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                  activeTab === 'preview'
+                    ? 'text-foreground border-primary'
+                    : 'text-muted-foreground border-transparent hover:text-foreground'
+                )}
+              >
+                <Play className="size-4" />
+                Preview
+              </button>
+              <button
+                onClick={() => setActiveTab('code')}
+                className={cn(
+                  'flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                  activeTab === 'code'
+                    ? 'text-foreground border-primary'
+                    : 'text-muted-foreground border-transparent hover:text-foreground'
+                )}
+              >
+                <Code2 className="size-4" />
+                Code
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 min-h-0">
+              {activeTab === 'preview' && (
+                canPreview ? (
+                  <div className="h-[50vh] sm:h-[55vh]">
+                    <SnippetPreview snippet={snippet} />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[50vh] sm:h-[55vh]">
+                    <div className="text-center">
+                      <Code2 className="size-10 mx-auto text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        Live preview is not available for {snippet.language}
+                      </p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">
+                        Switch to the Code tab to view the source
+                      </p>
+                    </div>
+                  </div>
+                )
+              )}
+
+              {activeTab === 'code' && (
+                <ScrollArea className="h-[50vh] sm:h-[55vh]">
+                  <div className="p-4 sm:p-6">
+                    <div className="rounded-lg bg-[#0c0c14] dark:bg-[#08080e] p-4 overflow-x-auto">
+                      <pre className="text-xs sm:text-sm font-mono leading-relaxed">
+                        <code>
+                          {lines.map((line, i) => (
+                            <div key={i} className="flex hover:bg-white/5 -mx-4 px-4 transition-colors">
+                              <span className="inline-block w-8 sm:w-10 text-right mr-4 sm:mr-6 text-muted-foreground/30 select-none shrink-0">
+                                {i + 1}
+                              </span>
+                              <span className="text-foreground/80 whitespace-pre">{line}</span>
+                            </div>
+                          ))}
+                        </code>
+                      </pre>
+                    </div>
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
 
             {/* Footer actions */}
             <div className="flex items-center justify-between px-6 py-4 border-t shrink-0">
