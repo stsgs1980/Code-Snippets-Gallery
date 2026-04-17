@@ -5,6 +5,8 @@ const dict = {
   //  HEADER
   // ============================================================
   'header.addSnippet':    { en: 'Add Snippet',    ru: 'Добавить' },
+  'header.toggleLang':     { en: 'Toggle language',      ru: 'Переключить язык' },
+  'header.toggleTheme':    { en: 'Toggle theme',         ru: 'Переключить тему' },
 
   // ============================================================
   //  HERO
@@ -77,6 +79,7 @@ const dict = {
   // ============================================================
   //  FOOTER
   // ============================================================
+  'footer.brand':          { en: 'Code Aesthetic Gallery \u00a9 2025', ru: 'Галерея Code Aesthetic \u00a9 2025' },
   'footer.builtWith':     { en: 'Built with Next.js, Tailwind CSS & shadcn/ui', ru: 'Создано на Next.js, Tailwind CSS и shadcn/ui' },
 
   // ============================================================

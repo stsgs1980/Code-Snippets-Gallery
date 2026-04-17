@@ -35,7 +35,7 @@ export function Header({ onAddClick }: HeaderProps) {
               variant="ghost"
               size="icon"
               onClick={toggleLocale}
-              aria-label="Toggle language"
+              aria-label={t('header.toggleLang')}
               className="text-xs font-bold w-auto px-2 gap-1"
             >
               <Languages className="size-4" />
@@ -45,7 +45,7 @@ export function Header({ onAddClick }: HeaderProps) {
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label="Toggle theme"
+              aria-label={t('header.toggleTheme')}
             >
               <Sun className="size-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute size-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

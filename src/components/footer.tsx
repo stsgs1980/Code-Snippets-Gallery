@@ -12,7 +12,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Code2 className="size-4" />
-            <span>Code Aesthetic Gallery &copy; 2025</span>
+            <span suppressHydrationWarning>{t('footer.brand')}</span>
           </div>
           <p className="text-xs" suppressHydrationWarning>
             {t('footer.builtWith')}
