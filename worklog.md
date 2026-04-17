@@ -91,3 +91,32 @@ Stage Summary:
 - Blob URL → srcdoc: решена cross-origin блокировка preview в sandboxed iframe
 - Все 12 сниппетов теперь показывают превью (9 интерактивных + 3 статических карточки)
 - CodeDialog больше не блокирует статичные сниппеты (Haskell/Python/Rust)
+
+---
+Task ID: 5
+Agent: main
+Task: Code review i18n — localStorage persistence, translation quality, dynamic html lang
+
+Work Log:
+- Обнаружил: i18n система уже полностью реализована (lib/i18n.ts + hooks/use-locale.tsx), все компоненты используют t()/tCat()
+- Провёл code review по критериям code-reviewer.md
+- Найден баг: язык не сохранялся в localStorage — сбрасывался при перезагрузке страницы
+- Найден баг: html lang="en" захардкожен, не обновлялся при смене языка
+- Найдено: русские переводы hero title разбиты некрасиво ("Встречается" + "С" + "Искусством")
+- Найдено: категории сокращены ("Генеративное иск.", "Креативное код.") — плохо читается
+- Исправлено use-locale.tsx: добавлено чтение/запись localStorage через lazy initializer + setLocale callback
+- Исправлено use-locale.tsx: динамическое обновление document.documentElement.lang через useEffect
+- Исправлено use-locale.tsx: автоопределение языка браузера (navigator.language)
+- Исправлен lint error: setState в useEffect → lazy initializer для useState (react-hooks/set-state-in-effect)
+- Улучшены русские переводы hero: "Где Код Становится Искусством" (вместо "Где Код Встречается С Искусством")
+- Улучшены переводы категорий: "Генеративное иск-во" (вместо "Генеративное иск.")
+- ESLint — чисто, dev server — без ошибок
+
+Stage Summary:
+- i18n система полностью функциональна с EN/RU переключением
+- Кнопка переключения в Header (иконка Languages + ENG/РУС текст)
+- localStorage persistence: выбор языка сохраняется между сессиями
+- Автоопределение языка браузера при первом визите
+- html lang обновляется динамически
+- Все 40+ UI строк переведены на русский (Header, Hero, FilterBar, Cards, Dialogs, Footer, Toasts, EmptyState)
+- 7 категорий переведены через tCat()

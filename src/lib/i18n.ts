@@ -11,9 +11,9 @@ const dict = {
   // ============================================================
   'hero.title1':          { en: 'Where',          ru: 'Где' },
   'hero.titleHighlight1': { en: 'Code',           ru: 'Код' },
-  'hero.title2':          { en: 'Meets',          ru: 'Встречается' },
-  'hero.titleHighlight2': { en: 'Art',            ru: 'С' },
-  'hero.title3':          { en: '',               ru: 'Искусством' },
+  'hero.title2':          { en: 'Meets',          ru: 'Становится' },
+  'hero.titleHighlight2': { en: 'Art',            ru: 'Искусством' },
+  'hero.title3':          { en: '',               ru: '' },
   'hero.subtitle':        { en: 'A curated gallery of beautiful code — algorithms, shaders, generative art, and creative coding masterpieces', ru: 'Подборка красивого кода — алгоритмы, шейдеры, генеративное искусство и шедевры креативного программирования' },
   'hero.statSnippets':    { en: 'Snippets',       ru: 'Сниппетов' },
   'hero.statLanguages':   { en: 'Languages',      ru: 'Языков' },
@@ -27,7 +27,7 @@ const dict = {
   'filter.category':      { en: 'Category:',             ru: 'Категория:' },
   'filter.all':           { en: 'All',                   ru: 'Все' },
 
-  'cat.generativeArt':    { en: 'Generative Art',        ru: 'Генеративное иск.' },
+  'cat.generativeArt':    { en: 'Generative Art',        ru: 'Генеративное иск-во' },
   'cat.algorithms':       { en: 'Algorithms',            ru: 'Алгоритмы' },
   'cat.shaders':          { en: 'Shaders',               ru: 'Шейдеры' },
   'cat.dataViz':          { en: 'Data Visualization',    ru: 'Визуализация' },
